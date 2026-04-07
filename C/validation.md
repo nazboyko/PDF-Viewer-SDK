@@ -136,3 +136,8 @@
 - Add bookmark works under MuPDF
 - Saved bookmarks persist (verified in Acrobat)
 - Add disabled under PDF.js with tooltip
+
+ls C/
+# Should show: cursor-plan.md, cursor-transcript.md, changes-from-ai.md, validation.md, README.md
+
+# Open each in your editor and skim for completeness

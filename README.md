@@ -8,7 +8,7 @@ Take-home assignment: a client-side PDF viewer SDK built with Vite, React, and T
 |--------|----------|
 | **A/** | Application source (Vite app) — run all npm commands from `A/` |
 | **B/** | Architecture and design document — [`architecture.md`](B/architecture.md) |
-| **C/** | Cursor AI usage log |
+| **C/** | Cursor AI usage log — [see `C/README.md`](C/README.md) |
 
 ## Prerequisites
 
