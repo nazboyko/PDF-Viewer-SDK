@@ -95,3 +95,10 @@
 - Edited files reflect mutations correctly
 - Print dialog shows PDF pages only, no app chrome
 - Print uses isolated iframe approach
+
+## Phase 17 — Linearized Loading
+- Generated sample-linearized.pdf with qpdf
+- Verified linearization with qpdf --check-linearization
+- Network tab shows multiple HTTP 206 responses
+- Progress bar fills smoothly
+- Page 1 renders before progress completes

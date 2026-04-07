@@ -9,6 +9,8 @@ import type { PDFDocument, PDFDocumentProxy } from '@/types/state';
 import { EditorPanel } from '../EditorPanel/EditorPanel';
 import { PageViewport } from '../PageViewport/PageViewport';
 
+import { LoadingBar } from './LoadingBar';
+
 import styles from './PdfWorkspace.module.css';
 
 export interface PdfWorkspaceProps {
@@ -33,15 +35,21 @@ export function PdfWorkspace({ source, filename, onClose }: PdfWorkspaceProps) {
       try {
         if (typeof source === 'string') {
           await engine.loadFromUrl(source, (p) => {
-            if (p.fraction != null) {
-              dispatch({ type: 'DOCUMENT_LOAD_PROGRESS', progress: p.fraction });
+            const prog =
+              p.fraction ??
+              (p.total != null && p.total > 0 ? p.loaded / p.total : undefined);
+            if (prog != null) {
+              dispatch({ type: 'DOCUMENT_LOAD_PROGRESS', progress: prog });
             }
           });
         } else {
           const buf = await source.arrayBuffer();
           await engine.loadFromBuffer(buf, (p) => {
-            if (p.fraction != null) {
-              dispatch({ type: 'DOCUMENT_LOAD_PROGRESS', progress: p.fraction });
+            const prog =
+              p.fraction ??
+              (p.total != null && p.total > 0 ? p.loaded / p.total : undefined);
+            if (prog != null) {
+              dispatch({ type: 'DOCUMENT_LOAD_PROGRESS', progress: prog });
             }
           });
         }
@@ -124,6 +132,7 @@ function PdfWorkspaceBody() {
   if (state.isLoading) {
     return (
       <div className={styles.main} role="status" aria-live="polite">
+        <LoadingBar progress={state.loadingProgress} />
         <p className={styles.status}>Loading…</p>
       </div>
     );

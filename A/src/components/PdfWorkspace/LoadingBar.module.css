@@ -1,0 +1,42 @@
+.wrap {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 12px;
+}
+
+.track {
+  height: 6px;
+  overflow: hidden;
+  background: #d4dce2;
+  border-radius: 3px;
+}
+
+.fill {
+  height: 100%;
+  background: #2d6a7a;
+  border-radius: 3px;
+  transition: width 0.2s ease-out;
+}
+
+.fillIndeterminate {
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    #2d6a7a 0%,
+    #245864 50%,
+    #2d6a7a 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 3px;
+  animation: loadingSlide 1.2s ease-in-out infinite;
+}
+
+@keyframes loadingSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}

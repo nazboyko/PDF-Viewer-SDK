@@ -176,7 +176,12 @@ export class PdfJsEngine implements PdfEngine {
       throw new PdfEngineError('ENGINE_DESTROYED');
     }
     await this.replaceDocument(async () => {
-      const task = getDocument({ url });
+      const task = getDocument({
+        url,
+        disableAutoFetch: true,
+        disableStream: false,
+        rangeChunkSize: 65536,
+      });
       attachProgress(task, onProgress);
       try {
         this.doc = await task.promise;
