@@ -129,3 +129,10 @@
 - Rectangle redaction performs true byte removal (verified with external viewer)
 - Text annotation persists across save/load cycle
 - Annotation tools disabled under PDF.js with tooltip
+
+## Phase 23 — Bookmarks Read/Write Panel
+- Bookmark panel reads existing outlines on both engines
+- Click-to-navigate works
+- Add bookmark works under MuPDF
+- Saved bookmarks persist (verified in Acrobat)
+- Add disabled under PDF.js with tooltip

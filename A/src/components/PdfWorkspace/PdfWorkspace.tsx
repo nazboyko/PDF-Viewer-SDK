@@ -7,7 +7,9 @@ import { DocumentModel } from '@/model';
 import type { EnginePreference, PageDescriptor } from '@/types/model';
 import type { PDFDocument, PDFDocumentProxy } from '@/types/state';
 
+import { BookmarkPanel } from '@/components/BookmarkPanel/BookmarkPanel';
 import { ErrorBanner } from '@/components/ErrorBanner/ErrorBanner';
+import { outlineNodesToBookmarks } from '@/hooks/useBookmarks';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 import { EditorPanel } from '../EditorPanel/EditorPanel';
@@ -104,6 +106,13 @@ export function PdfWorkspace({ source, filename, onClose }: PdfWorkspaceProps) {
           pageCount,
           pages,
         });
+
+        try {
+          const outline = await engine.getOutline();
+          dispatch({ type: 'SET_BOOKMARKS', bookmarks: outlineNodesToBookmarks(outline) });
+        } catch {
+          dispatch({ type: 'SET_BOOKMARKS', bookmarks: [] });
+        }
       } catch (e) {
         engine.destroy();
         if (!cancelled) {
@@ -178,7 +187,20 @@ function PdfWorkspaceBody() {
       tabIndex={0}
       onKeyDown={onKeyDown}
     >
-      <PageViewport />
+      <div
+        style={{
+          display: 'flex',
+          flex: 1,
+          minHeight: 0,
+          width: '100%',
+          alignItems: 'stretch',
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <PageViewport />
+        </div>
+        <BookmarkPanel />
+      </div>
     </div>
   );
 }

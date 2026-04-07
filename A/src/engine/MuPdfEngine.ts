@@ -7,6 +7,7 @@ import type {
   TextItem,
 } from '@/types/engine';
 import { PdfEngineError } from '@/types/engine';
+import type { Bookmark } from '@/types/state';
 
 import { loadMuPdf } from './loadMuPdf';
 
@@ -66,6 +67,8 @@ export class MuPdfEngine implements PdfEngine {
   private doc: Document | null = null;
   private storedBytes: Uint8Array | null = null;
   private dimensions: PageDimensions[] = [];
+  /** Maps bookmark id (app state) to outline iterator path; kept in sync via syncBookmarkPathsFromTree. */
+  private bookmarkPaths = new Map<string, number[]>();
 
   get pageCount(): number {
     if (this.destroyed) {
@@ -207,6 +210,7 @@ export class MuPdfEngine implements PdfEngine {
       this.doc = null;
       this.storedBytes = null;
       this.dimensions = [];
+      this.bookmarkPaths.clear();
     }
   }
 
@@ -316,6 +320,149 @@ export class MuPdfEngine implements PdfEngine {
       return [];
     }
     return mapOutlineTree(raw);
+  }
+
+  /**
+   * Rebuilds id → outline path mapping from the current bookmark tree and the loaded PDF outline.
+   * Call after SET_BOOKMARKS matches `loadOutline()` (e.g. after load or refetch) before remove/update.
+   */
+  syncBookmarkPathsFromTree(bookmarks: readonly Bookmark[]): void {
+    this.assertReady();
+    this.bookmarkPaths.clear();
+    const raw = this.doc!.loadOutline() ?? [];
+    const walk = (nodes: readonly Bookmark[], ol: MupdfOutlineItem[], prefix: number[]): void => {
+      if (nodes.length !== ol.length) {
+        return;
+      }
+      for (let i = 0; i < nodes.length; i++) {
+        const path = [...prefix, i];
+        this.bookmarkPaths.set(nodes[i]!.id, path);
+        const chN = nodes[i]!.children;
+        const chO = ol[i]?.down;
+        if (chN.length > 0 && chO && chO.length > 0) {
+          walk(chN, chO, path);
+        }
+      }
+    };
+    walk(bookmarks, raw, []);
+  }
+
+  private appendRootOutlineItem(item: MupdfOutlineItem): void {
+    const mupdf = this.mupdf;
+    if (!mupdf) {
+      throw new PdfEngineError('LOAD_FAILED', 'MuPDF not initialized');
+    }
+    const { OutlineIterator } = mupdf;
+    const iter = this.doc!.outlineIterator();
+    const outline = this.doc!.loadOutline();
+    const insertItem = {
+      title: item.title ?? '',
+      uri: item.uri,
+      open: item.open,
+    };
+    if (!outline?.length) {
+      iter.insert(insertItem);
+      return;
+    }
+    let code = iter.next();
+    if (code < 0) {
+      throw new PdfEngineError('LOAD_FAILED', 'Outline iterator could not start');
+    }
+    for (;;) {
+      if (code === OutlineIterator.ITERATOR_AT_EMPTY) {
+        iter.insert(insertItem);
+        return;
+      }
+      if (code !== OutlineIterator.ITERATOR_AT_ITEM) {
+        throw new PdfEngineError('LOAD_FAILED', 'Unexpected outline iterator state');
+      }
+      code = iter.next();
+      if (code < 0) {
+        throw new PdfEngineError('LOAD_FAILED', 'Outline iterator failed');
+      }
+      if (code === OutlineIterator.ITERATOR_AT_EMPTY) {
+        iter.insert(insertItem);
+        return;
+      }
+    }
+  }
+
+  private navigateIteratorToPath(path: number[]): ReturnType<Document['outlineIterator']> {
+    const mupdf = this.mupdf;
+    if (!mupdf) {
+      throw new PdfEngineError('LOAD_FAILED', 'MuPDF not initialized');
+    }
+    const { OutlineIterator } = mupdf;
+    const iter = this.doc!.outlineIterator();
+    let code = iter.next();
+    if (code < 0) {
+      throw new PdfEngineError('PAGE_NOT_FOUND', 'Outline is empty');
+    }
+    for (let depth = 0; depth < path.length; depth++) {
+      const idx = path[depth]!;
+      if (depth > 0) {
+        code = iter.down();
+        if (code < 0) {
+          throw new PdfEngineError('PAGE_NOT_FOUND', 'Invalid outline depth');
+        }
+      }
+      for (let s = 0; s < idx; s++) {
+        code = iter.next();
+        if (code !== OutlineIterator.ITERATOR_AT_ITEM) {
+          throw new PdfEngineError('PAGE_NOT_FOUND', 'Invalid outline sibling index');
+        }
+      }
+      if (code !== OutlineIterator.ITERATOR_AT_ITEM) {
+        throw new PdfEngineError('PAGE_NOT_FOUND', 'Outline item not found');
+      }
+    }
+    return iter;
+  }
+
+  addBookmark(title: string, pageIndex: number): void {
+    this.assertReady();
+    if (pageIndex < 0 || pageIndex >= this.pageCount) {
+      throw new PdfEngineError('PAGE_NOT_FOUND', `pageIndex ${pageIndex}`);
+    }
+    const mupdf = this.mupdf;
+    if (!mupdf) {
+      throw new PdfEngineError('LOAD_FAILED', 'MuPDF not initialized');
+    }
+    const { LinkDestination } = mupdf;
+    const uri = this.doc!.formatLinkURI(new LinkDestination(0, pageIndex, LinkDestination.FIT));
+    this.appendRootOutlineItem({ title, uri, open: true });
+    this.syncBytesFromPdf();
+  }
+
+  removeBookmark(id: string): void {
+    this.assertReady();
+    const path = this.bookmarkPaths.get(id);
+    if (!path?.length) {
+      throw new PdfEngineError('PAGE_NOT_FOUND', `Unknown bookmark id ${id}`);
+    }
+    const iter = this.navigateIteratorToPath(path);
+    iter.delete();
+    this.syncBytesFromPdf();
+  }
+
+  updateBookmark(id: string, title: string, pageIndex: number): void {
+    this.assertReady();
+    if (pageIndex < 0 || pageIndex >= this.pageCount) {
+      throw new PdfEngineError('PAGE_NOT_FOUND', `pageIndex ${pageIndex}`);
+    }
+    const path = this.bookmarkPaths.get(id);
+    if (!path?.length) {
+      throw new PdfEngineError('PAGE_NOT_FOUND', `Unknown bookmark id ${id}`);
+    }
+    const mupdf = this.mupdf;
+    if (!mupdf) {
+      throw new PdfEngineError('LOAD_FAILED', 'MuPDF not initialized');
+    }
+    const { LinkDestination } = mupdf;
+    const uri = this.doc!.formatLinkURI(new LinkDestination(0, pageIndex, LinkDestination.FIT));
+    const iter = this.navigateIteratorToPath(path);
+    iter.update({ title, uri, open: true });
+    this.syncBytesFromPdf();
   }
 
   private syncBytesFromPdf(): void {

@@ -1,0 +1,226 @@
+.panel {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #ffffff;
+  border-left: 1px solid #d4dce2;
+}
+
+.panelExpanded {
+  width: 280px;
+}
+
+.panelCollapsed {
+  width: 40px;
+  align-items: center;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #d4dce2;
+  min-height: 40px;
+}
+
+.title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2d6a7a;
+}
+
+.collapseBtn,
+.expandBtn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #2d6a7a;
+  background: #ffffff;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+}
+
+.collapseBtn:hover,
+.expandBtn:hover {
+  background: #d8e8ec;
+  border-color: #2d6a7a;
+}
+
+.collapseBtn:focus-visible,
+.expandBtn:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}
+
+.toolbar {
+  padding: 8px 10px;
+  border-bottom: 1px solid #d4dce2;
+}
+
+.addBtn {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  color: #2d6a7a;
+  background: #ffffff;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+}
+
+.addBtn:hover:not(:disabled) {
+  background: #d8e8ec;
+  border-color: #2d6a7a;
+}
+
+.addBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.addBtn:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}
+
+.tree {
+  list-style: none;
+  margin: 0;
+  padding: 8px 10px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.empty {
+  margin: 0;
+  padding: 8px 10px 12px;
+  font-size: 0.8125rem;
+  color: #245864;
+}
+
+.node {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.linkBtn {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 4px 6px;
+  font-size: 0.8125rem;
+  color: #245864;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.linkBtn:hover {
+  background: #d8e8ec;
+}
+
+.linkBtn:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}
+
+.iconBtn {
+  flex-shrink: 0;
+  min-height: 28px;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: #2d6a7a;
+  background: #ffffff;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+}
+
+.iconBtn:hover {
+  background: #d8e8ec;
+  border-color: #2d6a7a;
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}
+
+.children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.editForm input[type='text'],
+.editForm input[type='number'] {
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 0.8125rem;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+}
+
+.editForm input:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 0;
+}
+
+.pageLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #245864;
+}
+
+.editForm button[type='submit'],
+.editForm button[type='button'] {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: #2d6a7a;
+  background: #ffffff;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+}
+
+.editForm button[type='submit']:hover,
+.editForm button[type='button']:hover {
+  background: #d8e8ec;
+  border-color: #2d6a7a;
+}
+
+.editForm button:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}
