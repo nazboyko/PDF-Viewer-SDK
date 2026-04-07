@@ -89,3 +89,9 @@
 - Import inserts pages at correct position (after selected, or at end)
 - Extract downloads new PDF with correct pages
 - Downloaded file opens correctly in external viewer
+
+## Phase 16 — Save + Print
+- Download triggers file save with current document state
+- Edited files reflect mutations correctly
+- Print dialog shows PDF pages only, no app chrome
+- Print uses isolated iframe approach

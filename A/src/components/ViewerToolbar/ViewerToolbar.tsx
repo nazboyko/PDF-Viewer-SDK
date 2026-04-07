@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 
 import { useViewer } from '@/context/AppContext';
+import { PrintButton } from '@/components/PdfWorkspace/PrintButton';
+import { SaveButton } from '@/components/PdfWorkspace/SaveButton';
 import type { PdfEngine } from '@/types/engine';
 import type { PageDescriptor, ScrollMode } from '@/types/model';
 import type { PDFDocument, PDFDocumentProxy } from '@/types/state';
@@ -138,28 +140,6 @@ export function ViewerToolbar() {
     [runUpload],
   );
 
-  const onPrint = useCallback(() => {
-    window.print();
-  }, []);
-
-  const onDownload = useCallback(async () => {
-    if (!engine) {
-      return;
-    }
-    try {
-      const bytes = await engine.getDocumentBytes();
-      const blob = new Blob([bytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      /* ignore */
-    }
-  }, [engine, filename]);
-
   const onRefresh = useCallback(() => {
     dispatch({ type: 'RELOAD_DOCUMENT' });
     void runReload();
@@ -233,35 +213,9 @@ export function ViewerToolbar() {
         </span>
       </div>
 
-      <button
-        type="button"
-        className={styles.iconBtn}
-        aria-label="Print"
-        disabled={!hasDoc}
-        onClick={onPrint}
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-          <path
-            fill="currentColor"
-            d="M4 4V2h8v2H4zm-1 3h10a1 1 0 011 1v4h-2v3H4v-3H2V8a1 1 0 011-1zm1 0v2h8V7H4zm2 6h4v-2H6v2z"
-          />
-        </svg>
-      </button>
+      <PrintButton className={styles.iconBtn} />
 
-      <button
-        type="button"
-        className={styles.iconBtn}
-        aria-label="Download PDF"
-        disabled={!hasDoc}
-        onClick={() => void onDownload()}
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-          <path
-            fill="currentColor"
-            d="M8 1v8.5l2.5-2.5 1.5 1.5L8 14 4 8.5l1.5-1.5L8 9.5V1h2zm-5 12v2h10v-2H3z"
-          />
-        </svg>
-      </button>
+      <SaveButton className={styles.iconBtn} />
 
       <button
         type="button"
