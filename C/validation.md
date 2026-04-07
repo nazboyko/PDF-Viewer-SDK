@@ -84,3 +84,8 @@
 - Undo/Redo work across all operations
 - Engine reload after mutation does not throw "destroyed document"
 - Viewer reflects edits after exiting editor mode
+
+## Phase 15 — Import / Extract
+- Import inserts pages at correct position (after selected, or at end)
+- Extract downloads new PDF with correct pages
+- Downloaded file opens correctly in external viewer

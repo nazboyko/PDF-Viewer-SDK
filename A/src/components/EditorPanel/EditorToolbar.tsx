@@ -40,8 +40,12 @@ export function EditorToolbar() {
         className={styles.hiddenInput}
         aria-hidden="true"
         tabIndex={-1}
-        onChange={() => {
-          /* wired in Phase 15 */
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (!file) return;
+          const buf = await file.arrayBuffer();
+          editor.importPages(new Uint8Array(buf));
         }}
       />
       <button
@@ -71,7 +75,13 @@ export function EditorToolbar() {
       >
         Rotate Pages Right
       </button>
-      <button type="button" className={styles.btn} aria-label="Extract selected pages" onClick={() => {}}>
+      <button
+        type="button"
+        className={styles.btn}
+        aria-label="Extract selected pages"
+        disabled={disabled || !hasSelection}
+        onClick={() => editor.extractPages()}
+      >
         Extract Pages
       </button>
       <button

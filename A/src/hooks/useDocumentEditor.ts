@@ -38,11 +38,26 @@ export interface DocumentEditorApi {
   reorder: (fromIndex: number, toIndex: number) => void;
   copy: () => void;
   paste: () => void;
+  importPages: (bytes: Uint8Array) => void;
+  extractPages: () => void;
   undo: () => void;
   redo: () => void;
   isBusy: boolean;
   canUndo: boolean;
   canRedo: boolean;
+}
+
+function downloadPdfBytes(bytes: Uint8Array, filename: string): void {
+  const blob = new Blob([bytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 const DocumentEditorContext = createContext<DocumentEditorApi | null>(null);
@@ -174,6 +189,51 @@ function useDocumentEditorValue(): DocumentEditorApi {
     dispatch({ type: 'COPY_PAGES' });
   }, [dispatch]);
 
+  const importPages = useCallback(
+    async (bytes: Uint8Array) => {
+      if (bytes.byteLength === 0) return;
+      const importBytes = new Uint8Array(bytes);
+      await withModel(async (model) => {
+        const insertSpliceIndex =
+          editorState.selectedPages.size === 0
+            ? editorState.pages.length
+            : Math.max(...Array.from(editorState.selectedPages)) + 1;
+        const mergeAt1Based = insertSpliceIndex + 1;
+        await model.mergePdf(importBytes, mergeAt1Based);
+      });
+    },
+    [editorState.selectedPages, editorState.pages.length, withModel],
+  );
+
+  const extractPages = useCallback(async () => {
+    const sel = Array.from(editorState.selectedPages).sort((a, b) => a - b);
+    if (sel.length === 0) return;
+    const rawModel = viewerState.documentModel;
+    if (!rawModel || busyRef.current) return;
+    const model = rawModel as DocumentModel;
+    busyRef.current = true;
+    setBusy(true);
+    try {
+      const nums = sel.map((i) => {
+        const p = editorState.pages[i];
+        if (!p) throw new RangeError('Invalid page selection');
+        return p.sourceIndex + 1;
+      });
+      const extracted = await model.extractPages(nums);
+      const outBytes = await extracted.save();
+      const base =
+        viewerState.filename?.replace(/\.pdf$/i, '')?.trim() || 'document';
+      const name = `${base}-extracted.pdf`;
+      downloadPdfBytes(outBytes, name);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      window.alert(msg);
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }, [viewerState.documentModel, viewerState.filename, editorState.selectedPages, editorState.pages]);
+
   const undo = useCallback(async () => {
     if (busyRef.current || undoBytesRef.current.length === 0) return;
     const eng = viewerState.pdfEngine;
@@ -260,6 +320,12 @@ function useDocumentEditorValue(): DocumentEditorApi {
     copy,
     paste: () => {
       void paste();
+    },
+    importPages: (bytes) => {
+      void importPages(bytes);
+    },
+    extractPages: () => {
+      void extractPages();
     },
     undo: () => {
       void undo();
