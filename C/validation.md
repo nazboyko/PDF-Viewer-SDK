@@ -123,3 +123,9 @@
 - Lazy load via dynamic import — verified mupdf.wasm only fetched on MuPDF selection
 - COOP/COEP headers present, SharedArrayBuffer works
 - Both engines render the same PDF correctly
+
+## Phase 22 — Annotations
+- Two annotation tools: text + rectangle redaction (no others)
+- Rectangle redaction performs true byte removal (verified with external viewer)
+- Text annotation persists across save/load cycle
+- Annotation tools disabled under PDF.js with tooltip

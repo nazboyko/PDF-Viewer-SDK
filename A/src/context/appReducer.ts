@@ -310,7 +310,10 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, redactionOverlays: map };
     }
     case 'APPLY_REDACTIONS':
-      return state.activeEngineName !== 'mupdf' ? state : state;
+      if (state.activeEngineName !== 'mupdf') return state;
+      return { ...state, redactionOverlays: new Map() };
+    case 'DOCUMENT_SYNC_AFTER_MUTATION':
+      return { ...state, documentModel: action.model };
     case 'SET_BOOKMARKS':
       return { ...state, bookmarks: action.bookmarks.map(cloneBm) };
     case 'ADD_BOOKMARK':

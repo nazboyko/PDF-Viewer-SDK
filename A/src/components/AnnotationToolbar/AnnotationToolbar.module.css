@@ -1,0 +1,39 @@
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn {
+  box-sizing: border-box;
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 0.8125rem;
+  color: #2d6a7a;
+  background: #ffffff;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  background: #d8e8ec;
+  border-color: #2d6a7a;
+}
+
+.btn:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btnActive {
+  background: #d8e8ec;
+  border-color: #2d6a7a;
+}

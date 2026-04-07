@@ -12,7 +12,6 @@ import { loadMuPdf } from './loadMuPdf';
 
 import type { Document, Matrix as MuMatrix, PDFPage, Pixmap, Quad, Rect } from 'mupdf';
 
-/** Mirrors `mupdf`'s non-exported `OutlineItem` interface. */
 type MupdfOutlineItem = {
   title?: string;
   uri?: string;
@@ -25,19 +24,13 @@ type MuPdfNs = Awaited<ReturnType<typeof loadMuPdf>>;
 
 function normalizeRotation(degrees: number): 0 | 90 | 180 | 270 {
   const r = ((degrees % 360) + 360) % 360;
-  if (r === 0 || r === 90 || r === 180 || r === 270) {
-    return r;
-  }
-  return 0;
+  return r === 0 || r === 90 || r === 180 || r === 270 ? r : 0;
 }
 
 function pdfPageRotation(page: PDFPage): 0 | 90 | 180 | 270 {
   try {
-    const obj = page.getObject();
-    const r = obj.get('Rotate');
-    if (r && r.isNumber()) {
-      return normalizeRotation(r.asNumber());
-    }
+    const r = page.getObject().get('Rotate');
+    if (r && r.isNumber()) return normalizeRotation(r.asNumber());
   } catch {
     /* ignore */
   }
@@ -68,15 +61,10 @@ function mapOutlineTree(items: MupdfOutlineItem[]): OutlineNode[] {
 
 export class MuPdfEngine implements PdfEngine {
   readonly name = 'mupdf';
-
   private destroyed = false;
-
   private mupdf: MuPdfNs | null = null;
-
   private doc: Document | null = null;
-
   private storedBytes: Uint8Array | null = null;
-
   private dimensions: PageDimensions[] = [];
 
   get pageCount(): number {
@@ -328,6 +316,62 @@ export class MuPdfEngine implements PdfEngine {
       return [];
     }
     return mapOutlineTree(raw);
+  }
+
+  private syncBytesFromPdf(): void {
+    this.assertReady();
+    const pdf = this.doc!.asPDF();
+    if (!pdf) throw new PdfEngineError('LOAD_FAILED', 'Not a PDF document');
+    this.storedBytes = new Uint8Array(pdf.saveToBuffer().asUint8Array());
+  }
+
+  addRedaction(pageIndex: number, rect: { x: number; y: number; width: number; height: number }): void {
+    this.assertReady();
+    if (pageIndex < 0 || pageIndex >= this.pageCount) {
+      throw new PdfEngineError('PAGE_NOT_FOUND', `pageIndex ${pageIndex}`);
+    }
+    const page = this.doc!.loadPage(pageIndex) as PDFPage;
+    try {
+      const a = page.createAnnotation('Redact');
+      a.setRect([rect.x, rect.y, rect.x + rect.width, rect.y + rect.height]);
+      a.update();
+      page.update();
+    } finally {
+      page.destroy();
+    }
+  }
+
+  applyRedactions(): void {
+    this.assertReady();
+    for (let i = 0; i < this.pageCount; i++) {
+      const page = this.doc!.loadPage(i) as PDFPage;
+      try {
+        page.applyRedactions(true, 2, 1, 0);
+        page.update();
+      } finally {
+        page.destroy();
+      }
+    }
+    this.syncBytesFromPdf();
+  }
+
+  addTextAnnotation(pageIndex: number, x: number, y: number, text: string): void {
+    this.assertReady();
+    if (pageIndex < 0 || pageIndex >= this.pageCount) {
+      throw new PdfEngineError('PAGE_NOT_FOUND', `pageIndex ${pageIndex}`);
+    }
+    const page = this.doc!.loadPage(pageIndex) as PDFPage;
+    try {
+      const a = page.createAnnotation('FreeText');
+      a.setContents(text);
+      a.setRect([x, y, x + 200, y + 28]);
+      a.setDefaultAppearance('Helv', 12, [0, 0, 0]);
+      a.update();
+      page.update();
+    } finally {
+      page.destroy();
+    }
+    this.syncBytesFromPdf();
   }
 
   async getDocumentBytes(): Promise<Uint8Array> {

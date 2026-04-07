@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { RedactionOverlay } from '@/components/PageViewport/RedactionOverlay';
 import { ViewerToolbar } from '@/components/ViewerToolbar/ViewerToolbar';
 import { useViewer } from '@/context/AppContext';
 import type { PdfEngine } from '@/types/engine';
@@ -144,6 +145,7 @@ export function EmbeddedPageCanvas({
     pageCount,
     pageIndex,
     shouldRender,
+    state.documentModel,
     viewRotation,
     zoomLevel,
   ]);
@@ -166,11 +168,14 @@ export function EmbeddedPageCanvas({
 
   return (
     <div ref={wrapRef} className={styles.wrap}>
-      <canvas
-        ref={canvasRef}
-        className={styles.canvas}
-        aria-label={`PDF page ${pageIndex + 1}`}
-      />
+      <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+        <canvas
+          ref={canvasRef}
+          className={styles.canvas}
+          aria-label={`PDF page ${pageIndex + 1}`}
+        />
+        <RedactionOverlay pageIndex={pageIndex} canvasRef={canvasRef} layoutTick={layoutTick} />
+      </div>
     </div>
   );
 }
@@ -191,6 +196,7 @@ export function PageCanvas() {
     viewRotation,
     pageCount,
     scrollMode,
+    documentModel,
   } = state;
 
   const pageIndex = Math.min(Math.max(0, currentPage - 1), Math.max(0, pageCount - 1));
@@ -254,6 +260,7 @@ export function PageCanvas() {
       ac.abort();
     };
   }, [
+    documentModel,
     engine,
     error,
     fitMode,
@@ -282,7 +289,10 @@ export function PageCanvas() {
     <div className={styles.viewport}>
       <ViewerToolbar />
       <div ref={wrapRef} className={styles.wrap}>
-        <canvas ref={canvasRef} className={styles.canvas} aria-label={`PDF page ${currentPage}`} />
+        <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+          <canvas ref={canvasRef} className={styles.canvas} aria-label={`PDF page ${currentPage}`} />
+          <RedactionOverlay pageIndex={pageIndex} canvasRef={canvasRef} layoutTick={layoutTick} />
+        </div>
       </div>
     </div>
   );

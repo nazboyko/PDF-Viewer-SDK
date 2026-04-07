@@ -186,6 +186,8 @@ export type AppAction =
   | { type: 'ADD_REDACTION'; pageNumber: number; rect: RedactionRect }
   | { type: 'REMOVE_REDACTION'; pageNumber: number; rectIndex: number }
   | { type: 'APPLY_REDACTIONS' }
+  /** pdf-lib model only — engine bytes already updated (e.g. MuPDF annotations). */
+  | { type: 'DOCUMENT_SYNC_AFTER_MUTATION'; model: PDFDocument }
   | { type: 'SET_BOOKMARKS'; bookmarks: Bookmark[] }
   | { type: 'ADD_BOOKMARK'; bookmark: Bookmark }
   | { type: 'UPDATE_BOOKMARK'; id: string; updates: Partial<Pick<Bookmark, 'title' | 'pageIndex'>> }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 
+import { AnnotationToolbar } from '@/components/AnnotationToolbar/AnnotationToolbar';
 import { useViewer } from '@/context/AppContext';
 import { PrintButton } from '@/components/PdfWorkspace/PrintButton';
 import { SaveButton } from '@/components/PdfWorkspace/SaveButton';
@@ -216,6 +217,10 @@ export function ViewerToolbar() {
       <PrintButton className={styles.iconBtn} />
 
       <SaveButton className={styles.iconBtn} />
+
+      {hasDoc ? <AnnotationToolbar /> : null}
+
+      <span className={styles.divider} role="separator" aria-orientation="vertical" />
 
       <button
         type="button"
