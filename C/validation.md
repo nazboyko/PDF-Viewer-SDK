@@ -4,3 +4,8 @@
 - COOP/COEP headers present in response
 - tsc --noEmit: 0 errors
 - React placeholder renders
+
+## Phase 2 — Core Types
+- All four type files created in A/src/types/
+- tsc --noEmit: 0 errors
+- AppState/AppAction match plan section 5
