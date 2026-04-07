@@ -1126,7 +1126,7 @@ export class DocumentModel {
 **Goal:** Write the required architecture doc with component diagram, state management explanation, tradeoffs, and roadmap.
 **Depends on:** Phase 19
 **Files created/modified:**
-- `docs/architecture.md`
+- `B/architecture.md`
 
 **Acceptance:** Document contains: one Mermaid component diagram showing both engine paths, state management section (Context + useReducer rationale), key tradeoffs section (including PDF.js vs MuPDF dual-engine rationale), and an "if I had 1 more day" roadmap.
 
@@ -1367,7 +1367,7 @@ export class DocumentModel {
 
 ### B — Architecture & Design Document
 
-- [ ] **REQ-39: Component diagram** — `docs/architecture.md` contains a Mermaid (or image) component diagram showing all major components including the dual-engine path.
+- [ ] **REQ-39: Component diagram** — `B/architecture.md` contains a Mermaid (or image) component diagram showing all major components including the dual-engine path.
 - [ ] **REQ-40: State management description** — The document explains Context + useReducer, the two context split (Viewer/Editor), and why external libraries were not used.
 - [ ] **REQ-41: Key tradeoffs** — At least three tradeoff decisions are discussed with alternatives considered, including the dual-engine (PDF.js default / MuPDF opt-in) rationale.
 - [ ] **REQ-42: "If I had 1 more day" roadmap** — A concrete list of next steps, not vague aspirations.
@@ -1391,7 +1391,7 @@ These are not in the spec but a senior reviewer will check them:
 - [ ] **QA-4: Accessibility — critical/serious** — Run axe DevTools on the entry screen and the PDF viewer. Zero critical or serious violations. (Minor/moderate are acceptable for canvas-based content.)
 - [ ] **QA-5: README setup instructions** — `README.md` contains: prerequisites (Node version), install command (`npm install`), dev command (`npm run dev`), build command (`npm run build`), and a one-sentence project description. A fresh clone following these steps results in a running app.
 - [ ] **QA-6: Clean build** — `npm run build` completes with zero errors and zero warnings. The `dist/` output is servable via `npx vite preview`.
-- [ ] **QA-7: Deliverable structure** — The repo root contains the three deliverables clearly organized: the app source (`src/`), architecture doc (`docs/architecture.md`), and Cursor log (`docs/cursor-log.md`).
+- [ ] **QA-7: Deliverable structure** — The repo root contains the three deliverables clearly organized: the app source (`src/`), architecture doc (`B/architecture.md`), and Cursor log (`docs/cursor-log.md`).
 - [ ] **QA-8: No secrets or large binaries committed** — `.gitignore` excludes `node_modules/`, `dist/`, `.env`. Sample PDFs in `public/samples/` are under 5 MB each.
 - [ ] **QA-9: Retina rendering** — On a HiDPI display (or with Chrome DevTools DPR override set to 2), PDF text is sharp and not blurry.
 - [ ] **QA-10: Responsive layout** — At 768px viewport width, the app is usable: toolbar wraps or uses overflow menu, page grid adjusts column count.

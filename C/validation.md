@@ -108,3 +108,11 @@
 - Focus rings visible on keyboard nav only
 - Error banner appears for invalid files, dismissable
 - Layout usable at 768px viewport
+
+ ## Phase 19 - e2e playwright tests
+
+ ## Phase 20 — Architecture Document
+- B/architecture.md created with all four required sections
+- Mermaid diagram renders correctly in GitHub preview
+- Tradeoffs section covers dual-engine, undo strategy, no-backend
+- "1 more day" roadmap has 6 concrete items
