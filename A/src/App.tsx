@@ -2,8 +2,9 @@ import { useCallback, useState } from 'react';
 
 import type { EnginePreference } from '@/types/model';
 
+import { AppStateProvider } from './context/AppContext';
 import { FilePicker } from './components/FilePicker/FilePicker';
-import styles from './App.module.css';
+import { PdfWorkspace } from './components/PdfWorkspace/PdfWorkspace';
 
 const ENGINE_STORAGE_KEY = 'pdf-viewer-sdk-engine-preference';
 
@@ -54,13 +55,9 @@ export function App() {
 
   if (currentView === 'viewer' && selectedFile) {
     return (
-      <div className={styles.viewerShell}>
-        <p className={styles.filename}>Loaded: {selectedFile.name}</p>
-        <p className={styles.hint}>Viewer mounts in Phase 9.</p>
-        <button type="button" className={styles.backBtn} aria-label="Go back to file picker" onClick={backToPicker}>
-          Go back
-        </button>
-      </div>
+      <AppStateProvider>
+        <PdfWorkspace source={selectedFile.source} filename={selectedFile.name} onClose={backToPicker} />
+      </AppStateProvider>
     );
   }
 

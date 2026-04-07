@@ -1,0 +1,15 @@
+.wrap {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 200px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: #e8eef2;
+}
+
+.canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}

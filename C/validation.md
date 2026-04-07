@@ -47,3 +47,9 @@
 - EngineSelector toggle persists to localStorage (verified across reload)
 - File picker reads arrayBuffer immediately in onChange
 - Drag-and-drop drop zone highlights on dragover
+
+## Phase 9 — PdfWorkspace + Single-Page Rendering
+- End-to-end byte flow works: FilePicker → engine → render
+- Page 1 of sample PDF renders crisp
+- No fake worker warning
+- Engine destroyed on workspace unmount
