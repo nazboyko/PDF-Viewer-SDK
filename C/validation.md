@@ -21,3 +21,9 @@
 - Worker import uses ?url suffix (verified by hand)
 - tsc --noEmit: 0 errors
 - Render method stubbed, will be implemented in Phase 5
+
+## Phase 5 — PDF.js Adapter (Rendering)
+- renderPage uses devicePixelRatio for crisp retina rendering
+- AbortSignal handler calls renderTask.cancel
+- getOutline maps PDF.js outline to OutlineNode[]
+- tsc --noEmit: 0 errors
