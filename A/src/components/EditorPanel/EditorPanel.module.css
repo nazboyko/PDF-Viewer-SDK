@@ -1,0 +1,15 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  background: #e8eef2;
+}
+
+.gridWrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+}

@@ -6,6 +6,7 @@ import { DocumentModel } from '@/model';
 import type { PageDescriptor } from '@/types/model';
 import type { PDFDocument, PDFDocumentProxy } from '@/types/state';
 
+import { EditorPanel } from '../EditorPanel/EditorPanel';
 import { PageViewport } from '../PageViewport/PageViewport';
 
 import styles from './PdfWorkspace.module.css';
@@ -111,6 +112,14 @@ export function PdfWorkspace({ source, filename, onClose }: PdfWorkspaceProps) {
 
 function PdfWorkspaceBody() {
   const { state } = useViewer();
+
+  if (state.isEditorMode && !state.isLoading && !state.error) {
+    return (
+      <div className={styles.main}>
+        <EditorPanel />
+      </div>
+    );
+  }
 
   if (state.isLoading) {
     return (

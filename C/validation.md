@@ -71,3 +71,10 @@
 - Three view modes work, dropdown opens correctly
 - Spread mode handles odd page count (last page alone, not stretched)
 - currentPage preserved across mode switches
+
+## Phase 13 — Editor Panel
+- All 13 editor toolbar buttons present
+- Page thumbnails render in 4-col grid
+- Selection state works with single + multi-select
+- Editor zoom resizes thumbnails (separate from document zoom)
+- No mutations wired yet (Phase 14)

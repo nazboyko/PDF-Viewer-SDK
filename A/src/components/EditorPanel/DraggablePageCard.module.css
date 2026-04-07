@@ -1,0 +1,65 @@
+.card {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid #d4dce2;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+}
+
+.card:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}
+
+.card[data-selected='true'] {
+  border-color: #2d6a7a;
+  background: #d8e8ec;
+  box-shadow: 0 0 0 1px #2d6a7a;
+}
+
+.checkWrap {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2d6a7a;
+}
+
+.thumb {
+  flex-shrink: 0;
+  align-self: center;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e8eef2;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: #245864;
+}
+
+.pageNum {
+  font-weight: 600;
+}
+
+.rotBadge {
+  font-variant-numeric: tabular-nums;
+  color: #2d6a7a;
+}
