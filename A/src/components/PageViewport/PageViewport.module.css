@@ -1,0 +1,34 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: #e8eef2;
+}
+
+.slot {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 0 12px;
+}
+
+.slot:last-child {
+  padding-bottom: 0;
+}
+
+.placeholder {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  background: #e8eef2;
+}

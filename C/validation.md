@@ -60,3 +60,9 @@
 - Page input navigates correctly
 - Edit Pages button visually toggles active state
 - ResizeObserver triggers fit recalc on window resize
+
+## Phase 11 — Continuous scroll
+- Virtualized: only ±1 page rendered to canvas
+- Scrolled through 100+ page PDF, GPU memory stayed below 200 MB
+- Page input still navigates correctly
+- Scroll-driven currentPage updates work
