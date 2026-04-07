@@ -6,7 +6,7 @@ import { DocumentModel } from '@/model';
 import type { PageDescriptor } from '@/types/model';
 import type { PDFDocument, PDFDocumentProxy } from '@/types/state';
 
-import { PageCanvas } from '../PageViewport/PageCanvas';
+import { PageViewport } from '../PageViewport/PageViewport';
 
 import styles from './PdfWorkspace.module.css';
 
@@ -132,7 +132,7 @@ function PdfWorkspaceBody() {
 
   return (
     <div className={styles.main}>
-      <PageCanvas />
+      <PageViewport />
     </div>
   );
 }

@@ -66,3 +66,8 @@
 - Scrolled through 100+ page PDF, GPU memory stayed below 200 MB
 - Page input still navigates correctly
 - Scroll-driven currentPage updates work
+
+## Phase 12 — Single-page and Spread modes
+- Three view modes work, dropdown opens correctly
+- Spread mode handles odd page count (last page alone, not stretched)
+- currentPage preserved across mode switches

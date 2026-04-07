@@ -270,7 +270,7 @@ export function PageCanvas() {
     return null;
   }
 
-  if (scrollMode === 'continuous') {
+  if (scrollMode === 'continuous' || scrollMode === 'spread') {
     return (
       <Suspense fallback={null}>
         <PageViewportLazy />

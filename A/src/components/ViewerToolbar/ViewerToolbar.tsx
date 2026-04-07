@@ -14,6 +14,32 @@ const SCROLL_OPTIONS: { value: ScrollMode; label: string }[] = [
   { value: 'spread', label: 'Two-Page Spread' },
 ];
 
+/** Next 1-based page anchor when stepping by spread (cover, then pair starts 2,4,6,…). */
+function nextSpreadPage(currentPage: number, pageCount: number): number {
+  if (pageCount <= 1) {
+    return currentPage;
+  }
+  if (currentPage <= 1) {
+    return Math.min(2, pageCount);
+  }
+  const spreadStart = 2 + 2 * Math.floor((currentPage - 2) / 2);
+  const nextStart = spreadStart + 2;
+  return nextStart <= pageCount ? nextStart : currentPage;
+}
+
+/** Previous 1-based page anchor when stepping by spread. */
+function prevSpreadPage(currentPage: number): number {
+  if (currentPage <= 1) {
+    return 1;
+  }
+  if (currentPage === 2) {
+    return 1;
+  }
+  const spreadStart = 2 + 2 * Math.floor((currentPage - 2) / 2);
+  const prevStart = spreadStart - 2;
+  return prevStart >= 2 ? prevStart : 1;
+}
+
 function buildPages(engine: PdfEngine): { pageCount: number; pages: PageDescriptor[] } {
   const pageCount = engine.pageCount;
   const pages = Array.from({ length: pageCount }, (_, i) => {
@@ -162,6 +188,14 @@ export function ViewerToolbar() {
 
   const showPageInput = pageDraft !== '' ? pageDraft : String(state.currentPage);
 
+  const isSpread = state.scrollMode === 'spread';
+  const n = Math.max(1, state.pageCount);
+  const cp = state.currentPage;
+  const nextPageTarget = isSpread ? nextSpreadPage(cp, n) : cp + 1;
+  const prevPageTarget = isSpread ? prevSpreadPage(cp) : cp - 1;
+  const atLastSpread = isSpread && nextSpreadPage(cp, n) === cp;
+  const atFirstSpread = isSpread && cp <= 1;
+
   return (
     <div className={styles.toolbar} role="toolbar" aria-label="Viewer toolbar">
       <div className={styles.group}>
@@ -295,8 +329,8 @@ export function ViewerToolbar() {
           type="button"
           className={styles.iconBtn}
           aria-label="Previous page"
-          disabled={!hasDoc || state.currentPage <= 1}
-          onClick={() => dispatch({ type: 'SET_CURRENT_PAGE', page: state.currentPage - 1 })}
+          disabled={!hasDoc || (isSpread ? atFirstSpread : state.currentPage <= 1)}
+          onClick={() => dispatch({ type: 'SET_CURRENT_PAGE', page: prevPageTarget })}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
             <path fill="currentColor" d="M10 3L5 8l5 5V3z" />
@@ -317,8 +351,8 @@ export function ViewerToolbar() {
           type="button"
           className={styles.iconBtn}
           aria-label="Next page"
-          disabled={!hasDoc || state.currentPage >= state.pageCount}
-          onClick={() => dispatch({ type: 'SET_CURRENT_PAGE', page: state.currentPage + 1 })}
+          disabled={!hasDoc || (isSpread ? atLastSpread : state.currentPage >= state.pageCount)}
+          onClick={() => dispatch({ type: 'SET_CURRENT_PAGE', page: nextPageTarget })}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
             <path fill="currentColor" d="M6 3l5 5-5 5V3z" />
