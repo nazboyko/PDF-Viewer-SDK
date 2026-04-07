@@ -102,3 +102,9 @@
 - Network tab shows multiple HTTP 206 responses
 - Progress bar fills smoothly
 - Page 1 renders before progress completes
+
+## Phase 18 — Polish & Edge Cases
+- Keyboard shortcuts work without breaking browser shortcuts
+- Focus rings visible on keyboard nav only
+- Error banner appears for invalid files, dismissable
+- Layout usable at 768px viewport

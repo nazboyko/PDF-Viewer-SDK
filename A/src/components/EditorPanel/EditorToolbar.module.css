@@ -48,3 +48,15 @@
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+
+@media (max-width: 768px) {
+  .toolbar {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .btn {
+    padding: 0 8px;
+    font-size: 0.75rem;
+  }
+}

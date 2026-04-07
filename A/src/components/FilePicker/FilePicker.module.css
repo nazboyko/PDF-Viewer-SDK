@@ -115,3 +115,19 @@
   outline-offset: 2px;
   border-radius: 2px;
 }
+
+@media (max-width: 768px) {
+  .screen {
+    padding: 12px;
+    align-items: stretch;
+  }
+
+  .card {
+    max-width: none;
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 1.125rem;
+  }
+}

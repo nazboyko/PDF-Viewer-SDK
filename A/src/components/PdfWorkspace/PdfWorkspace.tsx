@@ -6,6 +6,9 @@ import { DocumentModel } from '@/model';
 import type { PageDescriptor } from '@/types/model';
 import type { PDFDocument, PDFDocumentProxy } from '@/types/state';
 
+import { ErrorBanner } from '@/components/ErrorBanner/ErrorBanner';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+
 import { EditorPanel } from '../EditorPanel/EditorPanel';
 import { PageViewport } from '../PageViewport/PageViewport';
 
@@ -119,7 +122,8 @@ export function PdfWorkspace({ source, filename, onClose }: PdfWorkspaceProps) {
 }
 
 function PdfWorkspaceBody() {
-  const { state } = useViewer();
+  const { state, dispatch } = useViewer();
+  const { onKeyDown } = useKeyboardShortcuts(null);
 
   if (state.isEditorMode && !state.isLoading && !state.error) {
     return (
@@ -141,15 +145,22 @@ function PdfWorkspaceBody() {
   if (state.error) {
     return (
       <div className={styles.main}>
-        <p className={styles.error} role="alert">
-          {state.error}
-        </p>
+        <ErrorBanner
+          message={state.error}
+          onDismiss={() => dispatch({ type: 'RELOAD_DOCUMENT' })}
+        />
       </div>
     );
   }
 
   return (
-    <div className={styles.main}>
+    <div
+      className={`${styles.main} ${styles.keyboardShell}`}
+      role="region"
+      aria-label="PDF viewer"
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+    >
       <PageViewport />
     </div>
   );

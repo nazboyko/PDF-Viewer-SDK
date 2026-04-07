@@ -1,0 +1,44 @@
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 12px 14px;
+  color: #5c1f1f;
+  background: #fde8e8;
+  border: 1px solid #d4dce2;
+  border-radius: 6px;
+}
+
+.text {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.dismiss {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: #2d6a7a;
+  background: #ffffff;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+}
+
+.dismiss:hover {
+  background: #d8e8ec;
+  border-color: #2d6a7a;
+}
+
+.dismiss:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}

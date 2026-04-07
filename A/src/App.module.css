@@ -1,3 +1,41 @@
+:global(:root) {
+  --pdf-color-primary: #2d6a7a;
+  --pdf-color-primary-hover: #245864;
+  --pdf-color-border: #d4dce2;
+  --pdf-color-bg: #e8eef2;
+  --pdf-color-toolbar: #ffffff;
+  --pdf-color-text: #245864;
+  --pdf-radius: 4px;
+  --pdf-radius-card: 6px;
+}
+
+:global(*),
+:global(*::before),
+:global(*::after) {
+  box-sizing: border-box;
+}
+
+:global(html) {
+  -webkit-text-size-adjust: 100%;
+}
+
+:global(body) {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  line-height: 1.45;
+  color: var(--pdf-color-text);
+  background: var(--pdf-color-bg);
+}
+
+:global(#root) {
+  min-height: 100vh;
+}
+
 .viewerShell {
   min-height: 100vh;
   margin: 0;
