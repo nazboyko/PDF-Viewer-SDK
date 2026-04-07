@@ -102,6 +102,24 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         error: null,
         activeEngineName: state.enginePreference,
       };
+    case 'DOCUMENT_EDIT_SYNC': {
+      const max = Math.max(1, action.pageCount);
+      return {
+        ...state,
+        pdfEngine: action.engine,
+        documentModel: action.model,
+        pageCount: action.pageCount,
+        pages: action.pages,
+        selectedPages: new Set(),
+        undoStack: [],
+        redoStack: [],
+        currentPage: clamp(state.currentPage, 1, max),
+        isLoading: false,
+        error: null,
+        isEditorMode: true,
+        copiedPageIndices: state.copiedPageIndices,
+      };
+    }
     case 'DOCUMENT_LOAD_ERROR':
       return { ...state, isLoading: false, error: action.error };
     case 'DOCUMENT_CLOSED':

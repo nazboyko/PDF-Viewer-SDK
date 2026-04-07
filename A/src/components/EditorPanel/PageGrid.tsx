@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useEditor } from '@/context/AppContext';
+import { useDocumentEditor } from '@/hooks/useDocumentEditor';
 
 import { DraggablePageCard } from './DraggablePageCard';
 
@@ -8,9 +9,13 @@ import styles from './PageGrid.module.css';
 
 export function PageGrid() {
   const { state, dispatch } = useEditor();
+  const { reorder } = useDocumentEditor();
   const { pages, selectedPages, editorThumbnailScale } = state;
 
   const [dragState, setDragState] = useState<{ sourceIndex: number; overIndex: number } | null>(null);
+  const dragRef = useRef<{ sourceIndex: number; overIndex: number } | null>(null);
+  const reorderRef = useRef(reorder);
+  reorderRef.current = reorder;
 
   const onSelect = useCallback(
     (index: number) => {
@@ -20,15 +25,34 @@ export function PageGrid() {
   );
 
   const onDragStart = useCallback((index: number) => {
-    setDragState({ sourceIndex: index, overIndex: index });
+    const next = { sourceIndex: index, overIndex: index };
+    dragRef.current = next;
+    setDragState(next);
   }, []);
 
   const onDragOver = useCallback((index: number) => {
-    setDragState((prev) => (prev ? { ...prev, overIndex: index } : null));
+    setDragState((prev) => {
+      if (!prev) return null;
+      const n = { ...prev, overIndex: index };
+      dragRef.current = n;
+      return n;
+    });
   }, []);
 
-  const onPointerUp = useCallback(() => {
-    setDragState(null);
+  useEffect(() => {
+    const finish = () => {
+      const d = dragRef.current;
+      dragRef.current = null;
+      setDragState(null);
+      if (!d || d.sourceIndex === d.overIndex) return;
+      void reorderRef.current(d.sourceIndex, d.overIndex);
+    };
+    window.addEventListener('pointerup', finish);
+    window.addEventListener('pointercancel', finish);
+    return () => {
+      window.removeEventListener('pointerup', finish);
+      window.removeEventListener('pointercancel', finish);
+    };
   }, []);
 
   return (
@@ -36,8 +60,6 @@ export function PageGrid() {
       className={styles.grid}
       role="list"
       aria-label="Page thumbnails"
-      onPointerUp={onPointerUp}
-      onPointerLeave={onPointerUp}
     >
       {pages.map((page, index) => (
         <div

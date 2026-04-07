@@ -78,3 +78,9 @@
 - Selection state works with single + multi-select
 - Editor zoom resizes thumbnails (separate from document zoom)
 - No mutations wired yet (Phase 14)
+
+## Phase 14 — Editor Operations
+- Rotate, Delete, Reorder, Copy, Paste all work
+- Undo/Redo work across all operations
+- Engine reload after mutation does not throw "destroyed document"
+- Viewer reflects edits after exiting editor mode

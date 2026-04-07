@@ -124,6 +124,14 @@ export type AppAction =
       pageCount: number;
       pages: PageDescriptor[];
     }
+  /** After DocumentModel mutation: reload engine bytes, rebuild page list, stay in editor mode */
+  | {
+      type: 'DOCUMENT_EDIT_SYNC';
+      engine: PDFDocumentProxy;
+      model: PDFDocument;
+      pageCount: number;
+      pages: PageDescriptor[];
+    }
   | { type: 'DOCUMENT_LOAD_ERROR'; error: string }
   | { type: 'DOCUMENT_CLOSED' }
 
