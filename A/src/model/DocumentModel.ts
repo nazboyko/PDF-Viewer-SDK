@@ -2,9 +2,17 @@ import { PDFDocument, degrees } from 'pdf-lib';
 
 const LOAD_OPTS = { ignoreEncryption: true } as const;
 
-function assertInRange1(page: number, pageCount: number): void {
-  if (!Number.isFinite(page) || Math.floor(page) !== page || page < 1 || page > pageCount) {
+/** Validates a 1-indexed page number in `[1, pageCount]`. */
+function assertPageIndex1(page: number, pageCount: number): void {
+  if (!Number.isInteger(page) || page < 1 || page > pageCount) {
     throw new RangeError(`Page ${page} out of range [1, ${pageCount}]`);
+  }
+}
+
+/** Validates insertion index for merge: `[1, pageCount + 1]` (append = pageCount + 1). */
+function assertMergeInsertIndex1(atPageIndex: number, pageCount: number): void {
+  if (!Number.isInteger(atPageIndex) || atPageIndex < 1 || atPageIndex > pageCount + 1) {
+    throw new RangeError(`atPageIndex ${atPageIndex} out of range [1, ${pageCount + 1}]`);
   }
 }
 
@@ -21,7 +29,7 @@ export class DocumentModel {
 
   static async fromBytes(bytes: Uint8Array): Promise<DocumentModel> {
     if (bytes.byteLength === 0) {
-      throw new Error('Empty PDF bytes');
+      throw new RangeError('Empty PDF bytes');
     }
     const pdfDoc = await PDFDocument.load(bytes, LOAD_OPTS);
     return new DocumentModel(pdfDoc);
@@ -38,7 +46,7 @@ export class DocumentModel {
     }
     const unique = uniqueSorted(pageNumbers);
     for (const p of unique) {
-      assertInRange1(p, pc);
+      assertPageIndex1(p, pc);
     }
     for (const p of unique) {
       const page = this.pdfDoc.getPage(p - 1);
@@ -55,10 +63,10 @@ export class DocumentModel {
     }
     const unique = uniqueSorted(pageNumbers);
     for (const p of unique) {
-      assertInRange1(p, pc);
+      assertPageIndex1(p, pc);
     }
     if (unique.length === pc) {
-      throw new Error('Cannot delete all pages');
+      throw new RangeError('Cannot delete all pages');
     }
     const indices0 = unique.map((p) => p - 1).sort((a, b) => b - a);
     for (const i of indices0) {
@@ -66,10 +74,14 @@ export class DocumentModel {
     }
   }
 
+  /**
+   * Moves the page at `fromIndex` to `toIndex` (both 1-based, same document).
+   * Semantics match array splice: remove at `fromIndex - 1`, insert at `toIndex - 1` in the post-removal page list.
+   */
   async reorderPages(fromIndex: number, toIndex: number): Promise<void> {
     const pc = this.pageCount();
-    assertInRange1(fromIndex, pc);
-    assertInRange1(toIndex, pc);
+    assertPageIndex1(fromIndex, pc);
+    assertPageIndex1(toIndex, pc);
     const from0 = fromIndex - 1;
     const to0 = toIndex - 1;
     if (from0 === to0) {
@@ -83,10 +95,10 @@ export class DocumentModel {
   async extractPages(pageNumbers: number[]): Promise<DocumentModel> {
     const pc = this.pageCount();
     if (pageNumbers.length === 0) {
-      throw new Error('Must extract at least one page');
+      throw new RangeError('Must extract at least one page');
     }
     for (const p of pageNumbers) {
-      assertInRange1(p, pc);
+      assertPageIndex1(p, pc);
     }
     const indices0 = pageNumbers.map((p) => p - 1);
     const target = await PDFDocument.create();
@@ -98,10 +110,11 @@ export class DocumentModel {
   }
 
   async mergePdf(otherBytes: Uint8Array, atPageIndex: number): Promise<void> {
-    const pc = this.pageCount();
-    if (atPageIndex < 1 || atPageIndex > pc + 1) {
-      throw new RangeError(`atPageIndex ${atPageIndex} out of range [1, ${pc + 1}]`);
+    if (otherBytes.byteLength === 0) {
+      throw new RangeError('Empty PDF bytes');
     }
+    const pc = this.pageCount();
+    assertMergeInsertIndex1(atPageIndex, pc);
     let source: PDFDocument;
     try {
       source = await PDFDocument.load(otherBytes, LOAD_OPTS);

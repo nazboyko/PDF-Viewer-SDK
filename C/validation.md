@@ -35,3 +35,9 @@
 - 1-indexed public API, 0-indexed pdf-lib internal
 - tsc --noEmit: 0 errors
 - Tests come in Phase 7
+
+## Phase 7 — DocumentModel tests
+- vitest installed
+- N tests pass (replace N)
+- Edge cases covered: empty array, out-of-range, delete-all, duplicate pages
+- Reorder tested both directions
