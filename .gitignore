@@ -1,13 +1,43 @@
-# dependencies
-/node_modules
+# Dependencies
+node_modules/
+A/node_modules/
 
-# production
-/build
-/public
+# Build output
+dist/
+A/dist/
+build/
+A/build/
 
-# misc
-.DS_Store
+# Vite cache
+.vite/
+A/.vite/
+
+# Environment
 .env
-.idea
-/.idea
-/.vscode
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+A/coverage/
+.nyc_output/
+
+# Cursor
+.cursor/
