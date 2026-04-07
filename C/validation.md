@@ -116,3 +116,10 @@
 - Mermaid diagram renders correctly in GitHub preview
 - Tradeoffs section covers dual-engine, undo strategy, no-backend
 - "1 more day" roadmap has 6 concrete items
+
+## Phase 21 — MuPDF Engine Adapter
+- mupdf installed
+- MuPdfEngine implements PdfEngine interface
+- Lazy load via dynamic import — verified mupdf.wasm only fetched on MuPDF selection
+- COOP/COEP headers present, SharedArrayBuffer works
+- Both engines render the same PDF correctly

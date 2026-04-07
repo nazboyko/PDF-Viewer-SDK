@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
 
 import { useViewer } from '@/context/AppContext';
+import { MuPdfEngine } from '@/engine/MuPdfEngine';
 import { PdfJsEngine } from '@/engine/PdfJsEngine';
 import { DocumentModel } from '@/model';
-import type { PageDescriptor } from '@/types/model';
+import type { EnginePreference, PageDescriptor } from '@/types/model';
 import type { PDFDocument, PDFDocumentProxy } from '@/types/state';
 
 import { ErrorBanner } from '@/components/ErrorBanner/ErrorBanner';
@@ -16,6 +17,20 @@ import { LoadingBar } from './LoadingBar';
 
 import styles from './PdfWorkspace.module.css';
 
+const ENGINE_STORAGE_KEY = 'pdf-viewer-sdk-engine-preference';
+
+function readStoredEnginePreference(): EnginePreference {
+  try {
+    const v = localStorage.getItem(ENGINE_STORAGE_KEY);
+    if (v === 'pdfjs' || v === 'mupdf') {
+      return v;
+    }
+  } catch {
+    /* private mode or storage blocked */
+  }
+  return 'pdfjs';
+}
+
 export interface PdfWorkspaceProps {
   /** Local file or URL string (e.g. bundled sample path). */
   source: File | string;
@@ -25,11 +40,13 @@ export interface PdfWorkspaceProps {
 
 export function PdfWorkspace({ source, filename, onClose }: PdfWorkspaceProps) {
   const { dispatch } = useViewer();
-  const engineRef = useRef<PdfJsEngine | null>(null);
+  const engineRef = useRef<PdfJsEngine | MuPdfEngine | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    const engine = new PdfJsEngine();
+    const preference = readStoredEnginePreference();
+    dispatch({ type: 'SET_ENGINE_PREFERENCE', preference });
+    const engine = preference === 'mupdf' ? new MuPdfEngine() : new PdfJsEngine();
     engineRef.current = engine;
 
     async function run(): Promise<void> {
