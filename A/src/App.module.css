@@ -1,13 +1,46 @@
-.root {
+.viewerShell {
   min-height: 100vh;
   margin: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
+  padding: 24px;
   font-family: system-ui, sans-serif;
+  background: #e8eef2;
 }
 
-.placeholder {
+.filename {
   margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
   color: #2d6a7a;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #245864;
+}
+
+.backBtn {
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: #2d6a7a;
+  background: #ffffff;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+}
+
+.backBtn:hover {
+  background: #d8e8ec;
+  border-color: #2d6a7a;
+}
+
+.backBtn:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
 }

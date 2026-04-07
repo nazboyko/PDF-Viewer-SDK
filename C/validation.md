@@ -41,3 +41,9 @@
 - N tests pass (replace N)
 - Edge cases covered: empty array, out-of-range, delete-all, duplicate pages
 - Reorder tested both directions
+
+## Phase 8 — File Picker Entry Screen
+- FilePicker renders centered on entry
+- EngineSelector toggle persists to localStorage (verified across reload)
+- File picker reads arrayBuffer immediately in onChange
+- Drag-and-drop drop zone highlights on dragover
