@@ -1,0 +1,197 @@
+# Project: PDF Viewer SDK
+
+## What we are building
+
+A client-side-only PDF viewer SDK web app, built as a Vite + React + TypeScript
+single-page application. The deliverable is the viewer SDK itself — not the
+host application that embeds it. Users land on a file-picker entry screen,
+choose a PDF (local file or bundled sample), and the viewer mounts inline.
+The viewer supports rendering, navigation, zoom, three view modes, a Document
+Editor mode with page operations, printing, and local save.
+
+This is a take-home assignment. The repo has three top-level folders required
+by the spec:
+  A/  — the working MVP source code
+  B/  — architecture and design document
+  C/  — Cursor AI usage log
+
+All application source lives inside A/. Inside A/ the layout is:
+  A/src/engine/      — PdfEngine interface + adapters
+  A/src/model/       — DocumentModel (pdf-lib wrapper)
+  A/src/components/  — React components
+  A/src/context/     — React Context providers + reducers
+  A/src/hooks/       — custom hooks
+  A/src/types/       — shared TypeScript types
+  A/public/samples/  — bundled sample PDFs
+
+The bonus WebAssembly tier is enabled. The MuPdfEngine adapter is implemented
+alongside PdfJsEngine. The bonus tier adds three features gated on the MuPDF
+engine being the active engine: rectangle redaction with true byte removal
+(not just a visual overlay), text annotations placed by clicking on a page,
+and bookmark read/write. Text-highlighter redaction, signature drawing, and
+full PDF form widget interaction are deliberately out of scope even within
+the bonus tier — they are too deep for the time budget.
+
+## Stack
+
+- TypeScript strict mode. No `any` types unless wrapping an untyped library.
+- React 18 with functional components and hooks. No class components.
+- Vite for dev server and bundling. Dev server must set COOP/COEP headers.
+- pdfjs-dist for default PDF rendering.
+- pdf-lib for all editing and export.
+- mupdf (WASM) for the bonus tier. Lazy-imported via dynamic import() so it
+  does not bloat the initial bundle when PDF.js is selected. Loaded only when
+  the user explicitly picks the MuPDF engine on the file picker screen.
+- CSS Modules for styling. No Tailwind, styled-components, or CSS-in-JS runtime.
+- Vitest for unit tests. Playwright if E2E is added later.
+
+The approved dependency list is the eight items above plus their type packages.
+Do not introduce any other runtime dependency without being asked. No date
+libraries, no utility libraries, no UI component libraries, no icon libraries,
+no drag-and-drop libraries — write what's needed inline.
+
+## Architecture rules
+
+- All PDF rendering goes through the PdfEngine interface in src/engine/types.ts.
+  Two adapters exist: PdfJsEngine (default) and MuPdfEngine (bonus tier).
+  No component imports pdfjs-dist or mupdf directly — only via the engine.
+- All PDF editing (rotate, reorder, merge, extract, save) goes through the
+  DocumentModel class in src/model/. Rendering and editing are separate concerns
+  with separate lifecycles. Never merge them.
+- State is managed by React Context + useReducer. There are TWO contexts:
+    ViewerContext — current page, zoom, fit mode, view mode, loading progress
+    EditorContext — page list, selection, undo/redo stack, dirty flag
+  This split prevents the editor from re-rendering on scroll-driven page changes.
+  Do not collapse them into a single context.
+- Sets and Maps in state must be replaced (not mutated) on every reducer update.
+  React's useReducer compares with Object.is — mutating in place skips renders.
+- Edit operations happen via a useDocumentEditor hook that wraps DocumentModel,
+  saves bytes after each mutation, reloads the engine from the new bytes, and
+  pushes a snapshot to the undo stack. Never mutate the engine in place.
+- Page numbers in public APIs are 1-indexed. pdf-lib uses 0-indexed internally.
+  DocumentModel handles the conversion. Never expose 0-indexed numbers to UI.
+- Render with devicePixelRatio so canvases are crisp on retina displays.
+- Continuous scroll mode is virtualized: only pages in the viewport ±1 page
+  are rendered to canvas. Off-screen pages are empty divs of correct height.
+- All async render calls accept an AbortSignal and cancel cleanly when
+  superseded by a newer render on the same canvas.
+- The active engine is chosen at file-load time, controlled by an
+  `enginePreference: 'pdfjs' | 'mupdf'` field on AppState. The user picks
+  via a toggle on the file picker entry screen, and the choice persists
+  in localStorage so it survives reloads.
+- The Vite dev server MUST set Cross-Origin-Opener-Policy: same-origin
+  and Cross-Origin-Embedder-Policy: require-corp headers. MuPDF requires
+  SharedArrayBuffer, which requires these headers. This is non-optional
+  now that the bonus tier is in scope. Configure these in vite.config.ts
+  via the server.headers option.
+- Bonus features (annotations, redaction, bookmarks write) MUST be disabled
+  in the UI when the active engine is PdfJsEngine. Show disabled buttons
+  with a tooltip explaining "Switch to MuPDF engine to enable this feature."
+  Never silently no-op a click.
+
+## Scope guardrails — DO NOT add these
+
+The following were considered and explicitly excluded from scope. If you find
+yourself proposing them, stop and ask first.
+
+- Do NOT build a records management UI. No RecordListView, RecordCard,
+  RecordDetailView, FileCard, or static records data file. The user lands
+  directly on a FilePicker entry screen.
+- Do NOT add a left thumbnail sidebar to the viewer. It is not in the demo
+  video and not required. The viewer has a single-row top toolbar and a
+  centered canvas, nothing else.
+- Do NOT build an ImportDialog modal with page selection. Import opens a
+  native file picker and merges all pages of the chosen file at the position
+  after the currently selected page.
+- Do NOT add a backend, API server, user accounts, authentication, or any
+  server-side persistence. Everything runs client-side.
+- Do NOT add features beyond what the current build phase asks for. If the
+  phase says "build the toolbar," do not also add keyboard shortcuts in the
+  same turn — that's a later phase.
+- Do NOT implement text-highlighter redaction. Only rectangle redaction.
+  Text-highlighter requires text-layer hit testing and selection state
+  management — too deep for the time budget.
+- Do NOT implement signature drawing or signature creation flows. Detecting
+  and rendering existing signature widget annotations as read-only is fine;
+  letting users draw or place signatures is out of scope.
+- Do NOT implement interactive PDF form widgets (checkboxes, text inputs,
+  radio buttons). If the engine surfaces them, render them as static visuals.
+  Do not wire them to user input.
+- Do NOT eagerly load mupdf on app start. It's a ~10 MB WASM binary. Use
+  dynamic import() inside MuPdfEngine methods so the WASM is only fetched
+  when the user actually selects MuPDF as their engine.
+
+## Viewer toolbar — exact button order
+
+The viewer toolbar is a single horizontal row. Buttons in this order, from
+left to right:
+
+  1. View-mode dropdown (grid icon + chevron) — Continuous / Single / Spread
+  2. Print
+  3. Download
+  4. Edit Pages (pen icon) — toggles editor mode, shows active state when on
+  5. Refresh
+  6. Upload
+  7. Vertical divider
+  8. "Page" label, prev arrow, page input, next arrow, "X / N" total
+  9. Vertical divider
+  10. Document icon (fit-to-page)
+  11. Zoom out
+  12. Zoom level readout (e.g. "100%")
+  13. Zoom in
+  14. Vertical divider
+  15. Rotate left
+  16. Rotate right
+
+## Editor toolbar — exact button order
+
+When editor mode is active, a second toolbar appears below the viewer toolbar
+with these buttons in order:
+
+  Scan | Import | Delete Pages | Rotate Pages Left | Rotate Pages Right |
+  Extract Pages | Undo | Redo | Zoom Out | Zoom In | Select None |
+  Copy Pages | Paste Pages
+
+Scan is a stub that logs to console — note this as a known limitation in
+the architecture doc. Editor Zoom In/Out controls thumbnail size in the page
+grid, separate from the viewer's document zoom.
+
+## Visual style
+
+Match the demo video's flat teal/blue-grey palette:
+
+  Primary color:           #2d6a7a   (active buttons, progress bars, links)
+  Primary hover:           #245864
+  Page canvas background:  #e8eef2   (pale blue-grey behind the page)
+  Toolbar background:      #ffffff
+  Border color:            #d4dce2
+  Active button background: #d8e8ec  with #2d6a7a border
+
+Single-row toolbars, 32px icon buttons, 8px gaps. No gradients, no shadows
+beyond focus rings, no rounded corners larger than 6px. Filename appears
+top-left next to a "Go Back" link when a document is open.
+
+## Code style
+
+- TypeScript strict: noImplicitAny, strictNullChecks, noUncheckedIndexedAccess.
+- Files capped at 400 lines. Split aggressively when approaching the limit.
+- One component per file. Co-locate the .module.css file next to the .tsx.
+- Imports in this order: external packages, internal absolute imports
+  (@/types, @/engine, etc.), relative imports, CSS modules.
+- Every interactive element has an aria-label. Buttons get :focus-visible
+  outline rings using the primary color.
+- Custom hooks named useX, dispatched actions named in SCREAMING_SNAKE_CASE,
+  components in PascalCase, files match the export name.
+- No console.log in committed code except where explicitly noted as a stub
+  (e.g. the Scan button).
+
+## What NOT to do
+
+- No `position: fixed` for toolbars or panels — use sticky or normal flow.
+- No eager rendering of all pages in continuous mode — always virtualize.
+- No mutation of state Sets/Maps — always create new instances.
+- No direct pdfjs-dist or mupdf imports outside src/engine/.
+- No direct pdf-lib imports outside src/model/.
+- No new dependencies without being asked.
+- No files larger than 400 lines.
+- No re-introduction of records UI, thumbnail sidebar, or import dialog.
