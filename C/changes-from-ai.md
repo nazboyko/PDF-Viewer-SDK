@@ -8,3 +8,9 @@ plan with the rules. Three requirements were dropped or changed from
 
 ## Phase 1 — Project Scaffold
 No changes from AI output.
+
+## Phase 4 — PdfEngine Interface + PDF.js Adapter (Loading)
+- Cursor's first attempt set workerSrc to a string path. This silently
+  fails in Vite's ESM dev server. I changed it to use the `?url` import
+  pattern: `import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'`.
+  Verified by checking for "Setting up fake worker" warnings (none).

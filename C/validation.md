@@ -15,3 +15,9 @@
 - Reducer exhaustive, default case has never check
 - All Set/Map updates create new instances
 - tsc --noEmit: 0 errors
+
+## Phase 4 — PdfEngine Interface + PDF.js Adapter (Loading)
+- PdfJsEngine class implements interface
+- Worker import uses ?url suffix (verified by hand)
+- tsc --noEmit: 0 errors
+- Render method stubbed, will be implemented in Phase 5

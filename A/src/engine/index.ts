@@ -1,1 +1,1 @@
-export {};
+export { PdfJsEngine } from './PdfJsEngine';
