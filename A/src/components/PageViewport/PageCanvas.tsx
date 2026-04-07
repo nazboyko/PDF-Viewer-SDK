@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { ViewerToolbar } from '@/components/ViewerToolbar/ViewerToolbar';
 import { useViewer } from '@/context/AppContext';
 import type { PdfEngine } from '@/types/engine';
 import { PdfEngineError } from '@/types/engine';
@@ -33,6 +34,7 @@ export function PageCanvas() {
     fitMode,
     viewRotation,
     pageCount,
+    scrollMode,
   } = state;
 
   const pageIndex = Math.min(Math.max(0, currentPage - 1), Math.max(0, pageCount - 1));
@@ -103,6 +105,7 @@ export function PageCanvas() {
     layoutTick,
     pageCount,
     pageIndex,
+    scrollMode,
     viewRotation,
     zoomLevel,
   ]);
@@ -112,8 +115,11 @@ export function PageCanvas() {
   }
 
   return (
-    <div ref={wrapRef} className={styles.wrap}>
-      <canvas ref={canvasRef} className={styles.canvas} aria-label={`PDF page ${currentPage}`} />
+    <div className={styles.viewport}>
+      <ViewerToolbar />
+      <div ref={wrapRef} className={styles.wrap}>
+        <canvas ref={canvasRef} className={styles.canvas} aria-label={`PDF page ${currentPage}`} />
+      </div>
     </div>
   );
 }

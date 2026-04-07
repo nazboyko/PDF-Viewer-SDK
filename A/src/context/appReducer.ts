@@ -122,13 +122,13 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, fitMode: action.mode };
     case 'SET_SCROLL_MODE':
       return { ...state, scrollMode: action.mode };
-    case 'ROTATE_VIEW':
-      return {
-        ...state,
-        viewRotation: ((state.viewRotation + action.delta + 360) % 360) as AppState['viewRotation'],
-      };
+    case 'ROTATE_VIEW': {
+      const next = (state.viewRotation + action.delta + 360) % 360;
+      const r = (next === 0 || next === 90 || next === 180 || next === 270 ? next : 0) as AppState['viewRotation'];
+      return { ...state, viewRotation: r };
+    }
     case 'RELOAD_DOCUMENT':
-      return state;
+      return { ...state, error: null };
     case 'ENTER_EDITOR':
       return { ...state, isEditorMode: true, selectedPages: new Set() };
     case 'EXIT_EDITOR': {

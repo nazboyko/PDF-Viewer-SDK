@@ -53,3 +53,10 @@
 - Page 1 of sample PDF renders crisp
 - No fake worker warning
 - Engine destroyed on workspace unmount
+
+## Phase 10 — Viewer Toolbar + Zoom Controls
+- All 16 toolbar buttons present in correct order
+- Zoom in/out, fit-to-page, fit-to-width all work
+- Page input navigates correctly
+- Edit Pages button visually toggles active state
+- ResizeObserver triggers fit recalc on window resize

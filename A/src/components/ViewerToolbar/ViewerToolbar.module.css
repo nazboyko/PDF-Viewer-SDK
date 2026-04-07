@@ -1,0 +1,163 @@
+.toolbar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #d4dce2;
+  box-sizing: border-box;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chevron {
+  display: flex;
+  color: #2d6a7a;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.viewModeIcon {
+  display: flex;
+  color: #2d6a7a;
+  flex-shrink: 0;
+}
+
+.select {
+  min-height: 32px;
+  padding: 0 8px;
+  font-size: 0.8125rem;
+  color: #245864;
+  background: #ffffff;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.select:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}
+
+.select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.iconBtn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: #2d6a7a;
+  background: #ffffff;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background: #d8e8ec;
+  border-color: #2d6a7a;
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}
+
+.iconBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.iconBtn[data-active='true'] {
+  background: #d8e8ec;
+  border-color: #2d6a7a;
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 24px;
+  background: #d4dce2;
+  flex-shrink: 0;
+}
+
+.pageNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pageLabel {
+  font-size: 0.8125rem;
+  color: #245864;
+}
+
+.pageInput {
+  box-sizing: border-box;
+  width: 3rem;
+  min-height: 32px;
+  padding: 0 6px;
+  font-size: 0.8125rem;
+  text-align: center;
+  color: #245864;
+  border: 1px solid #d4dce2;
+  border-radius: 4px;
+}
+
+.pageInput:focus-visible {
+  outline: 2px solid #2d6a7a;
+  outline-offset: 2px;
+}
+
+.pageInput:disabled {
+  opacity: 0.5;
+}
+
+.pageTotal {
+  font-size: 0.8125rem;
+  color: #245864;
+  white-space: nowrap;
+}
+
+.zoomReadout {
+  min-width: 3rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: #245864;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
