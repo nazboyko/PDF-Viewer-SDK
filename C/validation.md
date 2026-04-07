@@ -9,3 +9,9 @@
 - All four type files created in A/src/types/
 - tsc --noEmit: 0 errors
 - AppState/AppAction match plan section 5
+
+## Phase 3 — App State & Context
+- Two contexts (Viewer + Editor) created
+- Reducer exhaustive, default case has never check
+- All Set/Map updates create new instances
+- tsc --noEmit: 0 errors
