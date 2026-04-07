@@ -2,7 +2,7 @@
 
 ## 1. Project Overview
 
-We are building a client-side-only (no backend) web application in TypeScript + React + Vite that serves as a PDF viewer SDK. The app opens with a file picker entry screen where the user can choose a local PDF, drag-and-drop a file, or load a bundled sample. Once a file is selected, an inline PDF viewer/editor takes over the full viewport. The viewer supports rendering, navigation, zoom, scroll modes, a document editor mode (rotate, reorder, import/merge, extract, export pages), printing, and local save. An opt-in WASM tier (via `mupdf-wasm`) adds redaction annotations, text annotations, signature form fields, widget annotations, and bookmark read/write. Deliverables also include an architecture doc and a Cursor AI usage log.
+We are building a client-side-only (no backend) web application in TypeScript + React + Vite that serves as a PDF viewer SDK. The app opens with a file picker entry screen where the user can choose a local PDF, drag-and-drop a file, or load a bundled sample. Once a file is selected, an inline PDF viewer/editor takes over the full viewport. The viewer supports rendering, navigation, zoom, scroll modes, a document editor mode (rotate, reorder, import/merge, extract, export pages), printing, and local save. An opt-in WASM tier (via `mupdf-wasm`) adds rectangle redaction, text annotations, read-only rendering of existing signature and form-widget visuals, and bookmark read/write. Text-highlighter redaction, interactive signing, and interactive form filling are out of scope even in the WASM tier. Deliverables also include an architecture doc and a Cursor AI usage log.
 
 ---
 
@@ -43,19 +43,18 @@ We are building a client-side-only (no backend) web application in TypeScript + 
 
 ### WebAssembly Tier (mupdf-wasm) — opt-in via engine selector
 22. **Redaction annotations (rectangle-based)** — draw a rectangle over content to redact it. Requires MuPDF engine.
-23. **Redaction annotations (text-highlighter-based)** — select text and mark it for redaction. Requires MuPDF engine.
-24. **Text annotations** — add free-text annotations to pages. Requires MuPDF engine.
-25. **Signature form fields** — render and interact with signature fields in a PDF form. Requires MuPDF engine.
-26. **Widget annotations** — render and interact with generic widget annotations (checkboxes, text inputs, etc.). Requires MuPDF engine.
-27. **Bookmarks read** — parse and display the PDF's bookmark/outline tree. Requires MuPDF engine.
-28. **Bookmarks write** — create/edit/delete bookmarks and persist them in the PDF. Requires MuPDF engine.
-29. **Engine selector** — UI toggle on the entry screen that lets the user choose between PDF.js (default, fast, linearized) and MuPDF (WASM, annotations/bookmarks).
+23. **Text annotations** — add free-text annotations to pages. Requires MuPDF engine.
+24. **Signature form fields** — render existing signature widget annotations as read-only visuals (do not implement interactive signing). Requires MuPDF engine.
+25. **Widget annotations** — render existing form widgets (checkboxes, text inputs, radios) as read-only visuals (do not wire to user input). Requires MuPDF engine.
+26. **Bookmarks read** — parse and display the PDF's bookmark/outline tree. Requires MuPDF engine.
+27. **Bookmarks write** — create/edit/delete bookmarks and persist them in the PDF. Requires MuPDF engine.
+28. **Engine selector** — UI toggle on the entry screen that lets the user choose between PDF.js (default, fast, linearized) and MuPDF (WASM, annotations/bookmarks).
 
 ### Non-Functional / Deliverable Requirements
-30. **No backend** — everything runs client-side; PDFs are loaded from local files or bundled assets.
-31. **Stack constraint** — TypeScript, React, Vite, PDF.js (default), pdf-lib (editing/export), mupdf-wasm (WASM tier).
-32. **Architecture document** — one component diagram, state management approach, key tradeoffs, "if I had 1 more day" roadmap.
-33. **Cursor AI usage log** — Plan mode output, exported transcript, notes on AI-output changes, correctness validation notes.
+29. **No backend** — everything runs client-side; PDFs are loaded from local files or bundled assets.
+30. **Stack constraint** — TypeScript, React, Vite, PDF.js (default), pdf-lib (editing/export), mupdf-wasm (WASM tier).
+31. **Architecture document** — one component diagram, state management approach, key tradeoffs, "if I had 1 more day" roadmap.
+32. **Cursor AI usage log** — Plan mode output, exported transcript, notes on AI-output changes, correctness validation notes.
 
 ---
 
@@ -71,7 +70,7 @@ The host app (file picker + viewer) and the viewer SDK both need component compo
 Vite gives us sub-second HMR, native ESM dev serving, and — critically for this project — a dev server that handles HTTP Range requests on static files out of the box, which we need for real linearization loading. Next.js adds SSR machinery we don't need (no backend, no SEO). Webpack would work but requires more config for the same result. Vite is also the spec's explicit choice.
 
 ### 3.4 Why PDF.js as the default renderer, with mupdf-wasm as a secondary engine?
-PDF.js is the default engine because it works without WASM compilation, handles progressive/linearized loading natively via `PDFDocumentLoadingTask` with HTTP Range requests, and renders to a `<canvas>` with text and annotation layers already built. It requires zero special server headers (no COOP/COEP) and adds ~400 KB to the bundle. mupdf-wasm is offered as an opt-in secondary engine that the user activates via an engine selector toggle before opening a PDF. When MuPDF is active, the app gains access to annotation APIs (redaction, text annotations, signature fields, widget annotations) and read/write bookmark support that PDF.js cannot provide. The tradeoff is a ~10 MB WASM binary, no linearized loading (MuPDF must load the full blob before rendering), and a requirement for `SharedArrayBuffer` which mandates `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers. The dual-engine architecture is mediated by the `PdfEngine` interface: all viewer/editor components program against the interface, and `PdfWorkspace` instantiates either `PdfJsEngine` or `MuPdfEngine` based on `enginePreference` in state.
+PDF.js is the default engine because it works without WASM compilation, handles progressive/linearized loading natively via `PDFDocumentLoadingTask` with HTTP Range requests, and renders to a `<canvas>` with text and annotation layers already built. It requires zero special server headers (no COOP/COEP) and adds ~400 KB to the bundle. mupdf-wasm is offered as an opt-in secondary engine that the user activates via an engine selector toggle before opening a PDF. When MuPDF is active, the app gains access to annotation APIs for text annotations and rectangle redaction, read-only rendering of existing signature and form-widget visuals (no interactive signing or form filling), and read/write bookmark support that PDF.js cannot provide. The tradeoff is a ~10 MB WASM binary, no linearized loading (MuPDF must load the full blob before rendering), and a requirement for `SharedArrayBuffer` which mandates `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers. The dual-engine architecture is mediated by the `PdfEngine` interface: all viewer/editor components program against the interface, and `PdfWorkspace` instantiates either `PdfJsEngine` or `MuPdfEngine` based on `enginePreference` in state.
 
 ### 3.5 Why pdf-lib for editing instead of PDF.js or mupdf?
 PDF.js is a *read-only* library — it parses and renders but cannot write modified PDFs back to bytes. pdf-lib is purpose-built for PDF *manipulation*: it can copy pages between documents (`PDFDocument.copyPages`), remove pages, rotate pages (`page.setRotation`), and serialize to `Uint8Array` — exactly the operations our Document Editor needs. It operates on the PDF object model, not on rendered pixels, so it complements PDF.js perfectly: PDF.js renders, pdf-lib mutates, and we re-render after mutation.
@@ -163,10 +162,10 @@ CSS Modules (`.module.css` files). Vite supports them natively with zero config 
       Collapsible right sidebar that displays the PDF's bookmark tree. Read-only under PDF.js. Add/edit/delete under MuPDF. Disabled state with tooltip when PDF.js is active and write is attempted.
 
     - **`<AnnotationToolbar>`** — owns: `activeTool: AnnotationTool` | reads: `ViewerContext` (engineName)
-      Floating secondary toolbar with tool buttons for text annotation, rectangle redaction, and text-highlight redaction. All buttons render disabled with a "Requires MuPDF engine" tooltip when `engineName === 'pdfjs'`.
+      Floating secondary toolbar with two tool buttons: text annotation and rectangle redaction. All buttons render disabled with a "Requires MuPDF engine" tooltip when `engineName === 'pdfjs'`.
 
     - **`<RedactionOverlay>`** — owns: `rects: Rect[]`, `isDrawing: boolean` | props: `pageNumber`, `activeTool`
-      Transparent overlay on top of a PageCanvas that captures pointer events to draw redaction rectangles or highlight text selections. Only mounted when MuPDF is active and an annotation tool is selected.
+      Transparent overlay on top of a PageCanvas that captures pointer events to draw redaction rectangles only (drag-draw). Only mounted when MuPDF is active and rectangle redaction is the active tool.
 
 **Context provider boundaries:**
 - `ViewerContext` is provided by `<PdfWorkspace>` and consumed by everything inside it that reads/dispatches viewer state (zoom, page, scroll mode).
@@ -193,7 +192,7 @@ export type FitMode    = 'none' | 'width' | 'page';
 export type ScrollMode = 'continuous' | 'single' | 'spread';
 export type EnginePreference = 'pdfjs' | 'mupdf';
 
-export type AnnotationTool = 'text' | 'redact-rect' | 'redact-highlight' | 'signature' | null;
+export type AnnotationTool = 'text' | 'redact-rect' | null;
 
 export interface RedactionRect {
   x: number;
@@ -680,7 +679,7 @@ export interface PdfEngine {
 Two classes implement `PdfEngine`:
 
 - **`PdfJsEngine`** (default) — wraps `pdfjs-dist`. Supports linearized loading via Range requests. Does NOT support annotation creation/editing or bookmark writing. `getOutline()` is read-only.
-- **`MuPdfEngine`** (WASM, opt-in) — wraps `mupdf-wasm`. Loaded lazily via dynamic `import()` so the ~10 MB WASM binary is never fetched when the user stays on PDF.js. Supports annotation creation (text, redaction, signature, widget) and bookmark read/write via MuPDF's C API exposed through the WASM bindings. Does NOT support linearized loading — the full document must be fetched before rendering begins. Requires `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers for `SharedArrayBuffer` access.
+- **`MuPdfEngine`** (WASM, opt-in) — wraps `mupdf-wasm`. Loaded lazily via dynamic `import()` so the ~10 MB WASM binary is never fetched when the user stays on PDF.js. Supports creating text annotations and rectangle redactions; renders existing signature and form-widget annotations as read-only visuals (no interactive signing or form-widget input); supports bookmark read/write via MuPDF's C API exposed through the WASM bindings. Does NOT support linearized loading — the full document must be fetched before rendering begins. Requires `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers for `SharedArrayBuffer` access.
 
 The `PdfWorkspace` component reads `enginePreference` from state and instantiates the corresponding adapter. Engine selection is locked once a document is loaded — changing engines requires closing and re-opening the document.
 
@@ -1148,12 +1147,12 @@ export class DocumentModel {
 
 ---
 
-### Phase 22: Annotations (Text + Redaction)
-**Goal:** Implement text annotations and rectangle redaction using MuPDF's annotation API. Build the AnnotationToolbar and RedactionOverlay UI.
+### Phase 22: Annotations (Text + Rectangle Redaction)
+**Goal:** Implement text annotations and rectangle redaction using MuPDF's annotation API. Build the AnnotationToolbar (two tools only) and RedactionOverlay UI. Do not implement text-highlighter redaction (no text-layer selection for redaction).
 **Depends on:** Phase 21
 **Files created/modified:**
 - `src/components/AnnotationToolbar/AnnotationToolbar.tsx`, `AnnotationToolbar.module.css`
-- `src/components/PageViewport/RedactionOverlay.tsx`, `RedactionOverlay.module.css`
+- `src/components/PageViewport/RedactionOverlay.tsx`, `RedactionOverlay.module.css` — pointer handling for rectangle drag-draw only (no text-highlighter or text-selection redaction logic)
 - `src/engine/MuPdfEngine.ts` — add `addTextAnnotation(pageIndex, x, y, text)`, `addRedaction(pageIndex, rect)`, `applyRedactions()` methods (MuPDF-specific, not on the PdfEngine interface)
 - `src/hooks/useAnnotations.ts` — hook that bridges AnnotationToolbar state with MuPdfEngine methods
 - `src/context/appReducer.ts` — add `APPLY_REDACTIONS` action handler
@@ -1294,7 +1293,7 @@ export class DocumentModel {
 **Detection:** Select MuPDF engine, open a PDF. If the console shows `TypeError: SharedArrayBuffer is not defined` or `RuntimeError: memory access out of bounds`, the headers are missing.
 **Mitigation:** Configure Vite's dev server to send both headers: `server: { headers: { 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Embedder-Policy': 'require-corp' } }` in `vite.config.ts`. Add a runtime check in `MuPdfEngine.loadFromBuffer`: test `typeof SharedArrayBuffer !== 'undefined'` before initializing, and throw a clear `PdfEngineError('LOAD_FAILED', 'MuPDF requires COOP/COEP headers for SharedArrayBuffer. See README.')` if missing. Note: these headers break cross-origin resources (e.g. Google Fonts via CDN) — verify no external resources are loaded, or add `crossorigin` attributes where needed.
 
-### Phase 22: Annotations (Text + Redaction)
+### Phase 22: Annotations (Text + Rectangle Redaction)
 **Risk:** MuPDF's annotation API operates in WASM memory on the C-side document, but our rendering pipeline re-renders pages via `renderPage()` which may cache the previous rasterization. After adding a text annotation or applying a redaction, the canvas shows the old page without the annotation because MuPDF's internal render cache was not invalidated.
 **Detection:** Add a text annotation, then look at the canvas. If the annotation text is not visible on the rendered page, the cache is stale.
 **Mitigation:** After any annotation mutation, call `renderPage()` again with a fresh `AbortController` signal. Ensure the `MuPdfEngine.renderPage` implementation does not cache rasterized output — it should re-rasterize from the MuPDF document object on every call. If MuPDF does cache internally, call the WASM-side cache invalidation function (e.g., dropping and re-creating the display list for that page) before rendering.
@@ -1358,28 +1357,27 @@ export class DocumentModel {
 ### A.5 — WebAssembly Tier (MuPDF Engine)
 
 - [ ] **REQ-31: Redaction — rectangle** — *Requires MuPDF engine.* Select the rectangle redaction tool. Draw a rectangle over sensitive text. The area is visually blacked out. Click "Apply Redactions." Save the PDF — the redacted content is irrecoverably removed from the file (verify by searching for the original text in the saved file).
-- [ ] **REQ-32: Redaction — text highlight** — *Requires MuPDF engine.* Select the text-highlighter redaction tool. Select a word by clicking and dragging. The word is highlighted for redaction. Apply redactions and save — the word is gone.
-- [ ] **REQ-33: Text annotations** — *Requires MuPDF engine.* Select the text annotation tool. Click on a page and type a note. The annotation appears as a positioned text box. Save and reopen — the annotation persists.
-- [ ] **REQ-34: Signature form fields** — *Requires MuPDF engine.* Open a PDF that contains a signature form field. The field is rendered as an interactive widget. Click it — a signature input UI appears.
-- [ ] **REQ-35: Widget annotations** — *Requires MuPDF engine.* Open a PDF with form fields (checkboxes, text inputs). The widgets are interactive — checkboxes toggle, text inputs accept typing. Save — form state persists.
-- [ ] **REQ-36: Bookmarks — read** — *Requires MuPDF engine.* Open a PDF that contains an outline/bookmark tree. A bookmark panel displays the tree. Click a bookmark — the viewer navigates to the target page.
-- [ ] **REQ-37: Bookmarks — write** — *Requires MuPDF engine.* Add a new bookmark titled "My Note" pointing to page 5. Save the PDF, reopen it — the bookmark appears in the outline tree.
-- [ ] **REQ-38: Engine selector** — On the entry screen, toggle the engine selector to MuPDF. A warning displays ("~10 MB WASM download, no progressive loading"). Open a PDF — it loads via MuPDF (verify via toolbar engine indicator). Toggle back to PDF.js, re-open — it loads via PDF.js. The WASM binary is only fetched on first MuPDF selection (verify Network tab).
-- [ ] **REQ-39: Annotation tools disabled under PDF.js** — With PDF.js active, the annotation toolbar buttons are visible but disabled. Hovering shows a tooltip: "Requires MuPDF engine." No crash or error when clicking a disabled button.
+- [ ] **REQ-32: Text annotations** — *Requires MuPDF engine.* Select the text annotation tool. Click on a page and type a note. The annotation appears as a positioned text box. Save and reopen — the annotation persists.
+- [ ] **REQ-33: Signature form fields** — *Requires MuPDF engine.* Open a PDF that contains a signature form field. The field area is rendered as a static visual with a label indicating it's a signature field. Clicking it does NOT open an input UI.
+- [ ] **REQ-34: Widget annotations** — *Requires MuPDF engine.* Open a PDF with form fields. Checkboxes and text inputs are rendered as static visuals matching their declared state in the PDF. Clicking them does nothing.
+- [ ] **REQ-35: Bookmarks — read** — *Requires MuPDF engine.* Open a PDF that contains an outline/bookmark tree. A bookmark panel displays the tree. Click a bookmark — the viewer navigates to the target page.
+- [ ] **REQ-36: Bookmarks — write** — *Requires MuPDF engine.* Add a new bookmark titled "My Note" pointing to page 5. Save the PDF, reopen it — the bookmark appears in the outline tree.
+- [ ] **REQ-37: Engine selector** — On the entry screen, toggle the engine selector to MuPDF. A warning displays ("~10 MB WASM download, no progressive loading"). Open a PDF — it loads via MuPDF (verify via toolbar engine indicator). Toggle back to PDF.js, re-open — it loads via PDF.js. The WASM binary is only fetched on first MuPDF selection (verify Network tab).
+- [ ] **REQ-38: Annotation tools disabled under PDF.js** — With PDF.js active, the annotation toolbar buttons are visible but disabled. Hovering shows a tooltip: "Requires MuPDF engine." No crash or error when clicking a disabled button.
 
 ### B — Architecture & Design Document
 
-- [ ] **REQ-40: Component diagram** — `docs/architecture.md` contains a Mermaid (or image) component diagram showing all major components including the dual-engine path.
-- [ ] **REQ-41: State management description** — The document explains Context + useReducer, the two context split (Viewer/Editor), and why external libraries were not used.
-- [ ] **REQ-42: Key tradeoffs** — At least three tradeoff decisions are discussed with alternatives considered, including the dual-engine (PDF.js default / MuPDF opt-in) rationale.
-- [ ] **REQ-43: "If I had 1 more day" roadmap** — A concrete list of next steps, not vague aspirations.
+- [ ] **REQ-39: Component diagram** — `docs/architecture.md` contains a Mermaid (or image) component diagram showing all major components including the dual-engine path.
+- [ ] **REQ-40: State management description** — The document explains Context + useReducer, the two context split (Viewer/Editor), and why external libraries were not used.
+- [ ] **REQ-41: Key tradeoffs** — At least three tradeoff decisions are discussed with alternatives considered, including the dual-engine (PDF.js default / MuPDF opt-in) rationale.
+- [ ] **REQ-42: "If I had 1 more day" roadmap** — A concrete list of next steps, not vague aspirations.
 
 ### C — Cursor AI Usage Log
 
-- [ ] **REQ-44: Plan mode output** — `docs/cursor-log.md` includes the planning conversation or a summary of key decisions made during planning.
-- [ ] **REQ-45: Exported transcript** — At least one full Composer session transcript is included or linked.
-- [ ] **REQ-46: Change notes** — A table or list documenting at least 5 instances where AI output was modified, with the original suggestion, the change made, and the reason.
-- [ ] **REQ-47: Validation notes** — For each major feature, a sentence describing how correctness was verified.
+- [ ] **REQ-43: Plan mode output** — `docs/cursor-log.md` includes the planning conversation or a summary of key decisions made during planning.
+- [ ] **REQ-44: Exported transcript** — At least one full Composer session transcript is included or linked.
+- [ ] **REQ-45: Change notes** — A table or list documenting at least 5 instances where AI output was modified, with the original suggestion, the change made, and the reason.
+- [ ] **REQ-46: Validation notes** — For each major feature, a sentence describing how correctness was verified.
 
 ---
 
@@ -1406,3 +1404,6 @@ These are not in the spec but a senior reviewer will check them:
 - **pdf-lib font deduplication** — `pdf-lib`'s `copyPages` does not deduplicate embedded fonts/images across imports. Repeated imports of the same PDF will cause output file size to grow linearly. Documented in the architecture tradeoffs.
 - **Linearized loading with MuPDF** — MuPDF does not support progressive/linearized rendering. When MuPDF is selected, the full PDF must be downloaded before the first page renders. The progress bar still displays download progress.
 - **COOP/COEP headers** — MuPDF's `SharedArrayBuffer` requirement means the Vite dev server must serve COOP/COEP headers. This can break cross-origin resources (fonts, images loaded from CDNs). The app uses no external CDN resources to avoid this conflict.
+- **Text-highlighter redaction** — requires text-layer hit testing and selection state management; rectangle redaction provides equivalent capability for the demo.
+- **Interactive signature creation** — read-only rendering of existing signature fields is supported; drawing/applying new signatures is out of scope.
+- **Interactive form widgets** — read-only rendering of checkboxes/text inputs/radios is supported; user-driven form filling is out of scope.

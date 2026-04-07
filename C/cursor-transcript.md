@@ -1,5 +1,5 @@
 # PDF viewer SDK web app planning
-_Exported on 06/04/2026 at 22:30:08 GMT-5 from Cursor (3.0.12)_
+_Exported on 06/04/2026 at 23:07:45 GMT-5 from Cursor (3.0.12)_
 
 ---
 
@@ -2987,4 +2987,144 @@ The consolidated `cursor-plan.md` has been written with all corrections applied.
 - **24 per-phase risk entries** with detection and mitigation
 - **47 acceptance criteria** mapped to spec sections + **10 quality bar items**
 - **4 known limitations** documented explicitly
+
+---
+
+**User**
+
+I need to align the plan with the scope cuts in .cursorrules. When you re-added the bonus tier, you brought back the full original spec list, but .cursorrules explicitly excludes three features even within the bonus tier — text-highlighter redaction, interactive signature creation, and interactive PDF form widgets. The plan currently contradicts the rules in several places. Fix all of them.
+Apply these specific changes:
+
+Section 2 — Requirements list:
+
+Delete REQ-23 (text-highlighter redaction). Renumber subsequent requirements down.
+Rewrite the signature requirement: change from "render and interact with signature fields" to "render existing signature widget annotations as read-only visuals (do not implement interactive signing)."
+Rewrite the widget annotations requirement: change from "render and interact with widget annotations" to "render existing form widgets (checkboxes, text inputs, radios) as read-only visuals (do not wire to user input)."
+
+
+Section 4 — Component tree, <AnnotationToolbar> description:
+
+Remove "text-highlight redaction" from the list of tool buttons. The component now has only two tool buttons: text annotation and rectangle redaction.
+
+
+Section 10 — Acceptance criteria:
+
+Delete REQ-32 (text-highlighter redaction). Renumber.
+Rewrite the signature REQ to test read-only rendering: "Open a PDF that contains a signature form field. The field area is rendered as a static visual with a label indicating it's a signature field. Clicking it does NOT open an input UI."
+Rewrite the widget REQ to test read-only rendering: "Open a PDF with form fields. Checkboxes and text inputs are rendered as static visuals matching their declared state in the PDF. Clicking them does nothing."
+
+
+Section 8 — Build phases, Phase 22:
+
+Update the goal from "text annotations and rectangle redaction" to remain accurate (it already is) but ensure the file modifications list does not include text-highlighter selection logic. Phase 22's RedactionOverlay only handles rectangle drag-draw, not text selection.
+
+
+Section 12 — Known Limitations:
+
+Add three new bullets explaining what's deliberately out of scope within the bonus tier and why:
+
+"Text-highlighter redaction — requires text-layer hit testing and selection state management; rectangle redaction provides equivalent capability for the demo."
+"Interactive signature creation — read-only rendering of existing signature fields is supported; drawing/applying new signatures is out of scope."
+"Interactive form widgets — read-only rendering of checkboxes/text inputs/radios is supported; user-driven form filling is out of scope."
+
+
+
+
+
+Do not change anything else. Output only the modified sections so I can verify the diff.
+
+---
+
+**Cursor**
+
+
+Reading the plan file to locate sections to update.
+
+
+
+
+Applying edits to align the plan with `.cursorrules`: fixing remaining contradictions (RedactionOverlay, `AnnotationTool`, adapter blurb, overview, 3.4, Phase 22 goal, Section 12 wording) and syncing `C/cursor-plan.md`.
+
+
+
+
+Updates are applied in both [`cursor-plan.md`](cursor-plan.md) and [`C/cursor-plan.md`](C/cursor-plan.md). Section 2 already had no separate “text-highlighter redaction” requirement (only rectangle redaction, then text annotations, then read-only signature/widgets); REQ-33/REQ-34 acceptance text already matched your read-only tests. Below are the **modified sections only** for your diff review.
+
+---
+
+### Section 1 — Project Overview (paragraph)
+
+```markdown
+We are building a client-side-only (no backend) web application in TypeScript + React + Vite that serves as a PDF viewer SDK. The app opens with a file picker entry screen where the user can choose a local PDF, drag-and-drop a file, or load a bundled sample. Once a file is selected, an inline PDF viewer/editor takes over the full viewport. The viewer supports rendering, navigation, zoom, scroll modes, a document editor mode (rotate, reorder, import/merge, extract, export pages), printing, and local save. An opt-in WASM tier (via `mupdf-wasm`) adds rectangle redaction, text annotations, read-only rendering of existing signature and form-widget visuals, and bookmark read/write. Text-highlighter redaction, interactive signing, and interactive form filling are out of scope even in the WASM tier. Deliverables also include an architecture doc and a Cursor AI usage log.
+```
+
+---
+
+### Section 3.4 — excerpt (MuPDF sentence)
+
+```markdown
+mupdf-wasm is offered as an opt-in secondary engine that the user activates via an engine selector toggle before opening a PDF. When MuPDF is active, the app gains access to annotation APIs for text annotations and rectangle redaction, read-only rendering of existing signature and form-widget visuals (no interactive signing or form filling), and read/write bookmark support that PDF.js cannot provide.
+```
+
+---
+
+### Section 4 — `<RedactionOverlay>`
+
+```markdown
+    - **`<RedactionOverlay>`** — owns: `rects: Rect[]`, `isDrawing: boolean` | props: `pageNumber`, `activeTool`
+      Transparent overlay on top of a PageCanvas that captures pointer events to draw redaction rectangles only (drag-draw). Only mounted when MuPDF is active and rectangle redaction is the active tool.
+```
+
+---
+
+### Section 5 — `AnnotationTool` (Supporting Types)
+
+```typescript
+export type AnnotationTool = 'text' | 'redact-rect' | null;
+```
+
+---
+
+### Section 6 — Adapter implementations (`MuPdfEngine` bullet)
+
+```markdown
+- **`MuPdfEngine`** (WASM, opt-in) — wraps `mupdf-wasm`. Loaded lazily via dynamic `import()` so the ~10 MB WASM binary is never fetched when the user stays on PDF.js. Supports creating text annotations and rectangle redactions; renders existing signature and form-widget annotations as read-only visuals (no interactive signing or form-widget input); supports bookmark read/write via MuPDF's C API exposed through the WASM bindings. Does NOT support linearized loading — the full document must be fetched before rendering begins. Requires `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers for `SharedArrayBuffer` access.
+```
+
+---
+
+### Section 8 — Phase 22 (build phase + risk heading)
+
+**Phase 22:**
+
+```markdown
+### Phase 22: Annotations (Text + Rectangle Redaction)
+**Goal:** Implement text annotations and rectangle redaction using MuPDF's annotation API. Build the AnnotationToolbar (two tools only) and RedactionOverlay UI. Do not implement text-highlighter redaction (no text-layer selection for redaction).
+**Depends on:** Phase 21
+**Files created/modified:**
+- `src/components/AnnotationToolbar/AnnotationToolbar.tsx`, `AnnotationToolbar.module.css`
+- `src/components/PageViewport/RedactionOverlay.tsx`, `RedactionOverlay.module.css` — pointer handling for rectangle drag-draw only (no text-highlighter or text-selection redaction logic)
+```
+
+**Risks (heading only):**
+
+```markdown
+### Phase 22: Annotations (Text + Rectangle Redaction)
+```
+
+---
+
+### Section 10 — Acceptance (no change)
+
+**REQ-32 (text-highlighter)** was already absent; **REQ-33** / **REQ-34** already matched your read-only signature and widget criteria. No edits were made under §10.
+
+---
+
+### Section 12 — Known Limitations
+
+The three bonus-tier scope bullets were already present and match your wording; **no file change** there.
+
+---
+
+**Summary:** Section 2 did not list a separate text-highlighter requirement, so nothing was removed or renumbered there. Contradictions were fixed in the overview, §3.4, `RedactionOverlay`, `AnnotationTool`, `MuPdfEngine` description, Phase 22, and Phase 22 risk title. Both plan files are aligned.
 
