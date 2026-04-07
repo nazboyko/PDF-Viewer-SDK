@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import { ViewerToolbar } from '@/components/ViewerToolbar/ViewerToolbar';
 import { useViewer } from '@/context/AppContext';
@@ -16,12 +16,31 @@ export function PageViewport() {
   const engine = state.pdfEngine;
   const pageCount = state.pageCount;
 
+  const isDocumentReady =
+    !state.isLoading && !state.error && engine !== null && pageCount > 0;
+
   const { setPageElementRef, shouldRenderPage } = useVisiblePages(
     scrollRef,
     pageCount,
     dispatch,
     state.currentPage,
+    isDocumentReady,
   );
+
+  const setPageElementRefLatest = useRef(setPageElementRef);
+  setPageElementRefLatest.current = setPageElementRef;
+
+  const stableSlotRefByIndex = useRef<Record<number, (el: HTMLDivElement | null) => void>>({});
+
+  const refForSlot = useCallback((i: number) => {
+    // One stable function per index so React does not treat the ref as changed every render (Bug 3).
+    if (stableSlotRefByIndex.current[i] === undefined) {
+      stableSlotRefByIndex.current[i] = (el) => {
+        setPageElementRefLatest.current(i, el);
+      };
+    }
+    return stableSlotRefByIndex.current[i]!;
+  }, []);
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
@@ -51,9 +70,7 @@ export function PageViewport() {
         {Array.from({ length: pageCount }, (_, i) => (
           <div
             key={`page-row-${i}`}
-            ref={(el) => {
-              setPageElementRef(i, el);
-            }}
+            ref={refForSlot(i)}
             className={styles.slot}
             data-page-index={i}
           >
