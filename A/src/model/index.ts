@@ -1,1 +1,1 @@
-export {};
+export { DocumentModel } from './DocumentModel';

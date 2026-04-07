@@ -27,3 +27,11 @@
 - AbortSignal handler calls renderTask.cancel
 - getOutline maps PDF.js outline to OutlineNode[]
 - tsc --noEmit: 0 errors
+
+## Phase 6 — DocumentModel
+- All 8 methods implemented
+- deletePages sorts descending before loop
+- reorderPages handles from<to and from>to cases
+- 1-indexed public API, 0-indexed pdf-lib internal
+- tsc --noEmit: 0 errors
+- Tests come in Phase 7
